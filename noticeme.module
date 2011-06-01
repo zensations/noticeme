@@ -262,6 +262,12 @@ function noticeme_config_form($form, &$form_state) {
  * Implements hook_init().
  */
 function noticeme_init() {
+  $protocol = 'http://';
+  if (strpos('HTTPS', $_SERVER['SERVER_PROTOCOL']) > -1) {
+    $protocol = 'https://';
+  }
+  drupal_add_js($protocol . 'connect.facebook.net/' . variable_get('noticeme_facebook_locale', 'en_US') . '/all.js', 'external');
+  drupal_add_js($protocol . 'platform.twitter.com/widgets.js', 'external');
   $facebook_width = variable_get('noticeme_facebook_width', 100);
   $facebook_height = variable_get('noticeme_facebook_height', 30);
   drupal_add_js(array(
