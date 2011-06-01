@@ -1,0 +1,322 @@
+<?php
+/**
+ * Implements hook_preprocess_node().
+ */
+function noticeme_preprocess_node(&$vars) {
+  global $base_url;
+  $modes = variable_get('noticeme_social_modes', array());
+  $networks = variable_get('noticeme_social_networks', array());
+  $types = variable_get('noticeme_social_types', array());
+  $vars['content']['links']['noticeme'] = array(
+    '#theme' => 'links__node__noticeme',
+    '#links' => array(),
+  );
+  // skip if view mode or content type is not configured
+  if (!in_array($vars['view_mode'], $modes)
+			|| $modes[$vars['view_mode']] === 0
+      || !array_key_exists($vars['type'], $types)
+      || $types[$vars['type']] === 0) {
+    return;
+  }
+  if (in_array('twitter', $networks)) {
+    $vars['content']['links']['social']['#links']['twitter'] = array(
+      'title' => t('Tweet this'),
+      'href' => 'http://twitter.com/share',
+      'attributes' => array(
+        'class' => array('twitter-share-button', variable_get('noticeme_twitter_count', 'none')),
+      ),
+    );
+    $vars['content']['#attached']['js']['http://platform.twitter.com/widgets.js'] = array('type' => 'external');
+  }
+  if (in_array('facebook', $networks)) {
+    $vars['content']['links']['social']['#links']['facebook'] = array(
+      'title' => t('Like this'),
+      'href' => url('http://www.facebook.com/plugins/like.php', array(
+        'query' => array(
+          'href' => $base_url . url($vars['uri']['path']),
+          'layout' => variable_get('noticeme_facebook_layout', 'standard'),
+          'show_faces' => variable_get('noticeme_facebook_faces', 0)?'true':'false',
+          'width' => variable_get('noticeme_facebook_width', 100),
+          'height' => variable_get('noticeme_facebook_height', 80),
+          'action' => variable_get('noticeme_facebook_action', 'like'),
+          'font' => variable_get('noticeme_facebook_font', 'arial'),
+          'colorscheme' => variable_get('noticeme_facebook_color', 'light'),
+          'locale' => variable_get('noticeme_facebook_locale', 'en_US'),
+        ),
+      )),
+      'attributes' => array(
+        'class' => array('facebook-like-button'),
+      ),
+    );
+  }
+}
+
+/**
+ * Configuration form.
+ */
+function noticeme_config_form($form, &$form_state) {
+  /*
+   * Facebook Open Graph Settings
+   */
+  $form['fb'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Facebook Open Graph Settings'),
+  );
+  $form['fb']['noticeme_fb_admins'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Facebook Admin IDs'),
+    '#default_value' => variable_get('noticeme_fb_admins', ''),
+  );
+  $form['fb']['noticeme_fb_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Open Graph type'),
+    '#options' => array(
+      'Activities' => array(
+        'activity' => 'activity',
+        'sport' => 'sport',
+      ),
+      'Businesses' => array(
+        'bar' => 'bar',
+        'company' => 'company',
+        'cafe' => 'cafe',
+        'hotel' => 'hotel',
+        'restaurant' => 'restaurant',
+      ),
+      'Groups' => array(
+        'cause' => 'cause',
+        'sports_league' => 'sports_league',
+        'sports_team' => 'sports_team',
+      ),
+      'Organizations' => array(
+        'band' => 'band',
+        'government' => 'government',
+        'non_profit' => 'non_profit',
+        'school' => 'school',
+        'university' => 'university',
+      ),
+      'People' => array(
+        'actor' => 'actor',
+        'athlete' => 'athlete',
+        'author' => 'author',
+        'director' => 'director',
+        'musician' => 'musician',
+        'politician' => 'politician',
+        'public_figure' => 'public_figure',
+      ),
+      'Places' => array(
+        'city' => 'city',
+        'country' => 'country',
+        'landmark' => 'landmark',
+        'state_province' => 'state_province',
+      ),
+      'Products and Entertainment' => array(
+        'album' => 'album',
+        'book' => 'book',
+        'drink' => 'drink',
+        'food' => 'food',
+        'game' => 'game',
+        'product' => 'product',
+        'song' => 'song',
+        'movie' => 'movie',
+        'tv_show' => 'tv_show',
+      ),
+      'Websites' => array(
+        'blog' => 'blog',
+        'website' => 'website',
+        'article' => 'article',
+      ),
+    ),
+    '#default_value' => variable_get('noticeme_fb_type', 'blog'),
+  );
+  $form['fb']['noticeme_fb_description'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Open Graph Description'),
+    '#default_value' => variable_get('noticeme_fb_description', ''),
+  );
+  /*
+   * Social Sharing Buttons
+   */
+  $form['social'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Social sharing'),
+  );
+  $form['social']['noticeme_social_networks'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Social network buttons'),
+    '#options' => array(
+      'facebook' => t('Facebook'),
+      'twitter' => t('Twitter'),
+    ),
+    '#default_value' => variable_get('noticeme_social_networks', array()),
+  );
+  $form['social']['noticeme_social_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Attach buttons to content types'),
+    '#options' => array(),
+    '#default_value' => variable_get('noticeme_social_types', array()),
+  );
+  foreach (field_info_bundles('node') as $type => $t) {
+    $form['social']['noticeme_social_types']['#options'][$type] = $t['label'];
+  }
+  $form['social']['noticeme_social_modes'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Attach buttons to view modes'),
+    '#options' => array(),
+    '#default_value' => variable_get('noticeme_social_modes', array()),
+  );
+  $info = entity_get_info('node');
+  foreach ($info['view modes'] as $key => $mode) {
+    $form['social']['noticeme_social_modes']['#options'][$key] = $mode['label'];
+  }
+  $form['social']['facebook'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Configure facebook like button'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    'noticeme_facebook_layout' => array(
+      '#type' => 'select',
+      '#title' => t('Layout'),
+      '#options' => array(
+        'standard' => 'standard',
+        'button_count' => 'button_count',
+        'box_count' => 'box_count',
+      ),
+      '#default_value' => variable_get('noticeme_facebook_layout', 'standard'),
+    ),
+    'noticeme_facebook_locale' => array(
+      '#type' => 'select',
+      '#title' => t('Locale'),
+      '#options' => array(
+        'en_US' => 'en_US',
+        'de_DE' => 'de_DE',
+      ),
+      '#default_value' => variable_get('noticeme_facebook_locale', 'en_US'),
+    ),
+    'noticeme_facebook_width' => array(
+      '#type' => 'textfield',
+      '#title' => t('Width'),
+      '#default_value' => variable_get('noticeme_facebook_width', 100),
+    ),
+    'noticeme_facebook_height' => array(
+      '#type' => 'textfield',
+      '#title' => t('Height'),
+      '#default_value' => variable_get('noticeme_facebook_height', 80),
+    ),
+    'noticeme_facebook_faces' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Show faces'),
+      '#default_value' => variable_get('noticeme_facebook_faces', 0),
+    ),
+    'noticeme_facebook_action' => array(
+      '#type' => 'select',
+      '#title' => t('Verb to display'),
+      '#options' => array(
+        'like' => 'like',
+        'recommend' => 'recommend',
+      ),
+      '#default_value' => variable_get('noticeme_facebook_action', 'like'),
+    ),
+    'noticeme_facebook_font' => array(
+      '#type' => 'select',
+      '#title' => t('font'),
+      '#options' => array(
+        'arial' => 'arial',
+        'lucida grande' => 'lucida grande',
+        'segoe ui' => 'segoe ui',
+        'tahoma' => 'tahoma',
+        'trebuchet ms' => 'trebuchet ms',
+        'verdana' => 'verdana',
+      ),
+      '#default_value' => variable_get('noticeme_facebook_font', 'arial'),
+    ),
+    'noticeme_facebook_color' => array(
+      '#type' => 'select',
+      '#title' => t('Color scheme'),
+      '#options' => array(
+        'light' => 'light',
+        'dark' => 'dark',
+      ),
+      '#default_value' => variable_get('noticeme_facebook_color', 'light'),
+    ),
+  );
+  $form['social']['twitter'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Configure tweet button'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    'noticeme_twitter_count' => array(
+      '#type' => 'select',
+      '#title' => t('Data count'),
+      '#options' => array(
+        'data-count-none' => t('No count'),
+        'data-count-horizontal' => t('Horizontal count'),
+        'data-count-vertical' => t('Vertical count'),
+      ),
+      '#default_value' => variable_get('noticeme_twitter_count', 'none'),
+    ),
+  );
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_init().
+ */
+function noticeme_init() {
+  $facebook_width = variable_get('noticeme_facebook_width', 100);
+  $facebook_height = variable_get('noticeme_facebook_height', 30);
+  drupal_add_js(array(
+    'noticeme_facebook_width' => $facebook_width,
+    'noticeme_facebook_height' => $facebook_height,
+  ), 'setting');
+  $meta = array();
+  $fb_admins = variable_get('noticeme_fb_admins', '');
+  if (drupal_strlen($fb_admins) > 0) {
+    global $base_url;
+    $meta = array(
+      'og:site_name' => variable_get('site_name'),
+      'og:title' => variable_get('site_slogan'),
+      'og:description' => variable_get('noticeme_fb_description', ''),
+      'og:type' => variable_get('noticeme_fb_type', 'blog'),
+      'fb:admins' => $fb_admins,
+      'og:url' => $base_url,
+      'og:image' => $base_url . '/' . path_to_theme() . '/screenshot.png',
+    );
+  }
+
+  drupal_alter('noticeme_meta', $meta);
+  foreach ($meta as $key => $value) {
+    drupal_add_html_head(array(
+        '#tag' => 'meta',
+        '#attributes' => array(
+          'property' => $key,
+          'content' => $value,
+        )
+      ), $key);
+  }
+}
+
+
+/**
+ * Implements hook_rdf_namespaces().
+ */
+function noticeme_rdf_namespaces() {
+  return array(
+    'fb'  => 'http://www.facebook.com/2008/fbml',
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function noticeme_menu() {
+  $items = array();
+  $items['admin/config/content/noticeme'] = array(
+    'title' => 'Notice Me! configuration',
+    'description' => 'Configure the Notice Me! social connection settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('noticeme_config_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}

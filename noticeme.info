@@ -1,0 +1,7 @@
+; $Id$
+name = Notice Me!
+description = "Sharing Buttons and Open Graph Tags for websites with pathological ADHD."
+package = content
+version = 0.1
+core = 7.x
+files[] = noticeme.module
