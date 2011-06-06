@@ -23,10 +23,18 @@ function noticeme_preprocess_node(&$vars) {
       'title' => t('Tweet this'),
       'href' => 'http://twitter.com/share',
       'attributes' => array(
-        'class' => array('twitter-share-button', variable_get('noticeme_twitter_count', 'none')),
+        'class' => array('twitter-share-button'),
       ),
     );
-    $vars['content']['#attached']['js']['http://platform.twitter.com/widgets.js'] = array('type' => 'external');
+  }
+  if (in_array('google', $networks)) {
+    $vars['content']['links']['social']['#links']['google'] = array(
+      'title' => t('+1'),
+      'href' => $_GET['q'],
+      'attributes' => array(
+        'class' => array('google-plus-one'),
+      ),
+    );
   }
   if (in_array('facebook', $networks)) {
     $vars['content']['links']['social']['#links']['facebook'] = array(
@@ -146,6 +154,7 @@ function noticeme_config_form($form, &$form_state) {
     '#options' => array(
       'facebook' => t('Facebook'),
       'twitter' => t('Twitter'),
+      'google' => t('Google'),
     ),
     '#default_value' => variable_get('noticeme_social_networks', array()),
   );
@@ -242,17 +251,49 @@ function noticeme_config_form($form, &$form_state) {
   $form['social']['twitter'] = array(
     '#type' => 'fieldset',
     '#title' => t('Configure tweet button'),
-    '#collapsible' => TRUE,
+    '#collapsible' => TRUE,  
     '#collapsed' => TRUE,
     'noticeme_twitter_count' => array(
       '#type' => 'select',
       '#title' => t('Data count'),
       '#options' => array(
-        'data-count-none' => t('No count'),
-        'data-count-horizontal' => t('Horizontal count'),
-        'data-count-vertical' => t('Vertical count'),
+        'none' => t('No count'),
+        'horizontal' => t('Horizontal count'),
+        'vertical' => t('Vertical count'),
       ),
       '#default_value' => variable_get('noticeme_twitter_count', 'none'),
+    ),
+  );
+  $form['social']['google'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Configure +1 button'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    'noticeme_plusone_size' => array(
+      '#type' => 'select',
+      '#title' => t('Size'),
+      '#options' => array(
+        'small' => t('Small (15px)'),
+        'medium' => t('Medium (20px)'),
+        'standard' => t('Standard (24px)'),
+        'tall' => t('Tall (60px)'),
+      ),
+      '#default_value' => variable_get('noticeme_plusone_size', 'medium'),
+    ),
+    'noticeme_plusone_locale' => array(
+      '#type' => 'select',
+      '#title' => t('Locale'),
+      '#options' => array(
+        'en-US' => t('English'),
+        'de' => t('German'),
+      ),
+      '#default_value' => variable_get('noticeme_plusone_locale', 'en-US'),
+    ),
+    'noticeme_plusone_count' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Show count'),
+      '#description' => t('Size <emph>tall</emph> enforces count display.'),
+      '#default_value' => variable_get('noticeme_plusone_count', 1),
     ),
   );
   return system_settings_form($form);
@@ -262,18 +303,35 @@ function noticeme_config_form($form, &$form_state) {
  * Implements hook_init().
  */
 function noticeme_init() {
+  $networks = variable_get('noticeme_social_networks', array());
   $protocol = 'http://';
   if (strpos('HTTPS', $_SERVER['SERVER_PROTOCOL']) > -1) {
     $protocol = 'https://';
   }
-  drupal_add_js($protocol . 'connect.facebook.net/' . variable_get('noticeme_facebook_locale', 'en_US') . '/all.js', 'external');
-  drupal_add_js($protocol . 'platform.twitter.com/widgets.js', 'external');
-  $facebook_width = variable_get('noticeme_facebook_width', 100);
-  $facebook_height = variable_get('noticeme_facebook_height', 30);
-  drupal_add_js(array(
-    'noticeme_facebook_width' => $facebook_width,
-    'noticeme_facebook_height' => $facebook_height,
-  ), 'setting');
+  if (in_array('facebook', $networks)) {
+    $facebook_width = variable_get('noticeme_facebook_width', 100);
+    $facebook_height = variable_get('noticeme_facebook_height', 30);
+    drupal_add_js($protocol . 'connect.facebook.net/' . variable_get('noticeme_facebook_locale', 'en_US') . '/all.js', 'external');
+    drupal_add_js(array(
+      'noticeme_facebook_width' => $facebook_width,
+      'noticeme_facebook_height' => $facebook_height,
+    ), 'setting');
+  }
+  if (in_array('twitter', $networks)) {
+    drupal_add_js($protocol . 'platform.twitter.com/widgets.js', 'external');
+    drupal_add_js(array(
+      'noticeme_twitter_count' => variable_get('noticeme_twitter_count', 'none'),
+    ), 'setting');
+  }
+  if (in_array('google', $networks)) {
+    drupal_add_js($protocol . 'apis.google.com/js/plusone.js');
+    drupal_add_js(array(
+      'noticeme_plusone_size' => variable_get('noticeme_plusone_size', 'medium'),
+      'noticeme_plusone_locale' => variable_get('noticeme_plusone_locale', 'en-US'),
+      'noticeme_plusone_count' => variable_get('noticeme_plusone_count', 1),
+    ), 'setting');
+  }
+  drupal_add_js(drupal_get_path('module', 'noticeme') . '/noticeme.js');
   $meta = array();
   $fb_admins = variable_get('noticeme_fb_admins', '');
   if (drupal_strlen($fb_admins) > 0) {
@@ -317,8 +375,8 @@ function noticeme_rdf_namespaces() {
 function noticeme_menu() {
   $items = array();
   $items['admin/config/content/noticeme'] = array(
-    'title' => 'Notice Me! configuration',
-    'description' => 'Configure the Notice Me! social connection settings.',
+    'title' => 'Notice Me!',
+    'description' => 'Configure the <emph>Notice Me!</emph> social connection settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('noticeme_config_form'),
     'access arguments' => array('access administration pages'),

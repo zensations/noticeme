@@ -4,12 +4,17 @@
       // replace video links with embeds 
       // facebook like button
       $('a.facebook-like-button').each(function() {
-        $(this).replaceWith('<iframe class="facebook-like-button" src="' + $(this).attr('href') + '" scrolling="no" frameborder="0" style="border:none;overflow:hidden;width:' + settings.noticeme_width + 'px;height:' + settings.noticeme_facebook_height + 'px;" allowTransparency="true"></iframe>');
+        $(this).replaceWith('<iframe class="facebook-like-button" src="' + $(this).attr('href') + '" scrolling="no" frameborder="0" style="border:none;overflow:hidden;width:' + settings.noticeme_facebook_width + 'px;height:' + settings.noticeme_facebook_height + 'px;" allowTransparency="true"></iframe>');
       });
       // twitter button
-      $('a.data-count-vertical').attr('data-count', 'vertical');
-      $('a.data-count-horizontal').attr('data-count', 'horizontal');
-      $('a.data-count-none').attr('data-count', 'none');
+      $('a.twitter-share-button').attr('data-count', settings.noticeme_twitter_count);
+      $('a.google-plus-one').each(function() {
+        var count = 'true';
+        if (settings.noticeme_plusone_count == 0) {
+          count = 'false';
+        }
+        $(this).replaceWith('<g:plusone count="' + count + '" size="' + settings.noticeme_plusone_size + '" href="' + $(this).attr('href') + '"></g:plusone>');
+      });
     }
   }
 })(jQuery);
