@@ -190,7 +190,7 @@ function noticeme_config_form($form, &$form_state) {
         'button_count' => 'button_count',
         'box_count' => 'box_count',
       ),
-      '#default_value' => variable_get('noticeme_facebook_layout', 'standard'),
+      '#default_value' => variable_get('noticeme_facebook_layout', 'button_count'),
     ),
     'noticeme_facebook_locale' => array(
       '#type' => 'select',
@@ -204,12 +204,12 @@ function noticeme_config_form($form, &$form_state) {
     'noticeme_facebook_width' => array(
       '#type' => 'textfield',
       '#title' => t('Width'),
-      '#default_value' => variable_get('noticeme_facebook_width', 100),
+      '#default_value' => variable_get('noticeme_facebook_width', 80),
     ),
     'noticeme_facebook_height' => array(
       '#type' => 'textfield',
       '#title' => t('Height'),
-      '#default_value' => variable_get('noticeme_facebook_height', 80),
+      '#default_value' => variable_get('noticeme_facebook_height', 20),
     ),
     'noticeme_facebook_faces' => array(
       '#type' => 'checkbox',
@@ -261,7 +261,7 @@ function noticeme_config_form($form, &$form_state) {
         'horizontal' => t('Horizontal count'),
         'vertical' => t('Vertical count'),
       ),
-      '#default_value' => variable_get('noticeme_twitter_count', 'none'),
+      '#default_value' => variable_get('noticeme_twitter_count', 'horizontal'),
     ),
   );
   $form['social']['google'] = array(
