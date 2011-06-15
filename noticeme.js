@@ -14,6 +14,7 @@
           count = 'false';
         }
         $(this).replaceWith('<g:plusone count="' + count + '" size="' + settings.noticeme_plusone_size + '" href="' + $(this).attr('href') + '"></g:plusone>');
+        gapi.plusone.go();
       });
     }
   }
