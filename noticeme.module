@@ -324,7 +324,7 @@ function noticeme_init() {
     ), 'setting');
   }
   if (in_array('google', $networks)) {
-    drupal_add_js($protocol . 'apis.google.com/js/plusone.js');
+    drupal_add_js($protocol . 'apis.google.com/js/plusone.js', array('type' => 'external'));
     drupal_add_js(array(
       'noticeme_plusone_size' => variable_get('noticeme_plusone_size', 'medium'),
       'noticeme_plusone_locale' => variable_get('noticeme_plusone_locale', 'en-US'),
