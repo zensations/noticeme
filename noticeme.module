@@ -2,7 +2,7 @@
 /**
  * Implements hook_preprocess_node().
  */
-function noticeme_preprocess_node(&$vars) {
+function noticeme_node_view_alter(&$vars) {
   global $base_url;
   $modes = variable_get('noticeme_social_modes', array());
   $networks = variable_get('noticeme_social_networks', array());
@@ -12,14 +12,14 @@ function noticeme_preprocess_node(&$vars) {
     '#links' => array(),
   );
   // skip if view mode or content type is not configured
-  if (!in_array($vars['view_mode'], $modes)
-			|| $modes[$vars['view_mode']] === 0
-      || !array_key_exists($vars['type'], $types)
-      || $types[$vars['type']] === 0) {
+  if (!in_array($vars['#view_mode'], $modes)
+			|| $modes[$vars['#view_mode']] === 0
+      || !array_key_exists($vars['#bundle'], $types)
+      || $types[$vars['#bundle']] === 0) {
     return;
   }
   if (in_array('twitter', $networks)) {
-    $vars['content']['links']['social']['#links']['twitter'] = array(
+    $vars['links']['social']['#links']['twitter'] = array(
       'title' => t('Tweet this'),
       'href' => 'http://twitter.com/share',
       'attributes' => array(
@@ -28,7 +28,7 @@ function noticeme_preprocess_node(&$vars) {
     );
   }
   if (in_array('google', $networks)) {
-    $vars['content']['links']['social']['#links']['google'] = array(
+    $vars['links']['social']['#links']['google'] = array(
       'title' => t('+1'),
       'href' => $_GET['q'],
       'attributes' => array(
@@ -37,11 +37,11 @@ function noticeme_preprocess_node(&$vars) {
     );
   }
   if (in_array('facebook', $networks)) {
-    $vars['content']['links']['social']['#links']['facebook'] = array(
+    $vars['links']['social']['#links']['facebook'] = array(
       'title' => t('Like this'),
       'href' => url('http://www.facebook.com/plugins/like.php', array(
         'query' => array(
-          'href' => $base_url . url($vars['uri']['path']),
+          'href' => $base_url,
           'layout' => variable_get('noticeme_facebook_layout', 'standard'),
           'show_faces' => variable_get('noticeme_facebook_faces', 0)?'true':'false',
           'width' => variable_get('noticeme_facebook_width', 100),

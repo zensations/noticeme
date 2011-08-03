@@ -7,15 +7,16 @@
         $(this).replaceWith('<iframe class="facebook-like-button" src="' + $(this).attr('href') + '" scrolling="no" frameborder="0" style="border:none;overflow:hidden;width:' + settings.noticeme_facebook_width + 'px;height:' + settings.noticeme_facebook_height + 'px;" allowTransparency="true"></iframe>');
       });
       // twitter button
-      $('a.twitter-share-button').attr('data-count', settings.noticeme_twitter_count);
+      // $('a.twitter-share-button').attr('data-count', settings.noticeme_twitter_count);
+      $('a.twitter-share-button').replaceWith('<iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/tweet_button.html" style="width:120px; height:20px;"></iframe>');
       $('a.google-plus-one').each(function() {
         var count = 'true';
-        if (settings.noticeme_plusone_count == 0) {
+        if (settings.noticeme_plusone_count === 0) {
           count = 'false';
         }
         $(this).replaceWith('<g:plusone count="' + count + '" size="' + settings.noticeme_plusone_size + '" href="' + $(this).attr('href') + '"></g:plusone>');
         gapi.plusone.go();
       });
     }
-  }
+  };
 })(jQuery);
