@@ -1,22 +1,39 @@
 (function ($) {
+  Drupal.noticeme = {};
+  Drupal.noticeme.initFacebook = function() {
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/" + Drupal.settings.noticeme.fblang + "/all.js#xfbml=1";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  };
+  Drupal.noticeme.initGoogle = function() {
+    var po = document.createElement('script');
+    po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(po, s);
+  };
+  Drupal.noticeme.initTwitter = function() {
+    !function(d,s,id) {var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+  };
+ 
   Drupal.behaviors.noticeme = {
     attach: function(context, settings) {
-      // replace video links with embeds 
-      // facebook like button
-      $('a.facebook-like-button').each(function() {
-        $(this).replaceWith('<iframe class="facebook-like-button" src="' + $(this).attr('href') + '" scrolling="no" frameborder="0" style="border:none;overflow:hidden;width:' + settings.noticeme_facebook_width + 'px;height:' + settings.noticeme_facebook_height + 'px;" allowTransparency="true"></iframe>');
-      });
-      // twitter button
-      // $('a.twitter-share-button').attr('data-count', settings.noticeme_twitter_count);
-      $('a.twitter-share-button').replaceWith('<iframe allowtransparency="true" frameborder="0" scrolling="no" src="http://platform.twitter.com/widgets/tweet_button.html" style="width:120px; height:20px;"></iframe>');
-      $('a.google-plus-one').each(function() {
-        var count = 'true';
-        if (settings.noticeme_plusone_count === 0) {
-          count = 'false';
-        }
-        $(this).replaceWith('<g:plusone count="' + count + '" size="' + settings.noticeme_plusone_size + '" href="' + $(this).attr('href') + '"></g:plusone>');
-        gapi.plusone.go();
-      });
+      if ($('#fb-root').length === 0) {
+        $('<div id="fb-root"></div>').appendTo('body');
+      }
+      if ($('.fb-like', context).length) {
+        Drupal.noticeme.initFacebook();
+      }
+      if ($('.g-plusone', context).length) {
+        Drupal.noticeme.initGoogle();
+      }
+      if ($('.twitter-share-button', context).length) {
+        Drupal.noticeme.initTwitter();
+      }
     }
   };
 })(jQuery);
