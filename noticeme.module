@@ -1,80 +1,232 @@
 <?php
-function noticeme_entity_view_alter(&$build, $type) {
-  if ($type == 'user') {
-    $type = 'account';
-  }
-  if (($entity = @$build['#' . $type]) && ($info = noticeme_object_info($type, $entity))) {
-    $build['noticeme'] = array(
-      '#theme' => 'noticeme',
-      '#info' => $info,
-    );
-  }
+module_load_include('inc', 'noticeme', '/noticeme.field');
+module_load_include('inc', 'noticeme', '/noticeme.forms');
+
+function noticeme_menu() {
+  return array(
+    'admin/config/search/noticeme' => array(
+      'title' => t('Noticeme'),
+      'description' => t('Configure global settings for social media buttons.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('noticeme_admin_settings'),
+      'file' => 'noticeme.admin.inc',
+      'access arguments' => array('administer site configuration'),
+    ),
+  );
 }
 
 function noticeme_theme() {
-  $theme_params = array(
-    'path' => drupal_get_path('module', 'noticeme') . '/templates',
-  );
   return array(
-    'noticeme' => array(
+    'facebook_like' => array(
       'variables' => array(
-        'info' => array(),
+        'href' => FALSE,
+        'layout' => 'box_count',
+        'send' => 0,
+        'show-faces' => 0,
+        'action' => 0,
+        'colorscheme' => 'light',
+        'font' => 'lucida grande',
       ),
-      'template' => 'noticeme',
-    )
+      'file' => 'noticeme.theme.inc',
+    ),
+    'google_plus' => array(
+      'variables' => array(
+        'href' => FALSE,
+        'size' => 'medium',
+        'annotation' => 'info',
+      ),
+      'file' => 'noticeme.theme.inc',
+    ),
+    'twitter_tweet' => array(
+      'variables' => array(
+        'url' => FALSE,
+        'text' => '',
+        'count' => 'show',
+        'via' => '',
+        'size' => 'small',
+        'related' => '',
+        'hashtags' => '',
+      ),
+      'file' => 'noticeme.theme.inc',
+    ),
   );
 }
 
-function noticeme_object_info($type, $entity) {
-  $uri = entity_uri($type, $entity);
-  if (!$uri) {
-    return FALSE;
-  }
+
+
+/**
+ * Build global site information. Will be overridden with data from noticeme_page_info().
+ * @see hook_noticeme_site_info_alter()
+ */
+function noticeme_site_info() {
   $info = array();
-  $info['url'] = url($uri['path'], array('absolute' => TRUE));
-  $info['title'] = entity_label($type, $entity);
-  $info['image'] = FALSE;
-  $info['description'] = FALSE;
-  $info['entity'] = $entity;
-  $info['entity_type'] = $type;
-  drupal_alter('noticeme_object_info', $info);
+  $info['url'] = url(request_path(), array('absolute' => TRUE));
+  $info['title'] = variable_get('site_name');
+  $info['description'] = variable_get('site_slogan');
+  if (strlen(theme_get_setting('logo_path')) > 0) {
+    $info['image'] = file_create_url(theme_get_setting('logo_path'));
+  } else {
+    $info['image'] = FALSE;
+  }
+  drupal_alter('noticeme_site_info', $info);
   return $info;
 }
 
-function noticeme_field_extra_fields() {
-  $entity_info = entity_get_info();
-  $extra = array();
-  foreach ($entity_info as $type => $info) {
-    foreach (array_keys($info['bundles']) as $bundle) {
-      $extra[$type][$bundle] = array(
-        'display' => array(
-          'noticeme' => array(
-            'label' => t('Noticeme'),
-            'description' => t('Social Media Buttons'),
-            'weight' => 0,
-          ),
-        ),
-      );
-    }
+
+
+/**
+ * Build information for current page.
+ * @see hook_noticeme_page_info_alter()
+ */
+function noticeme_page_info() {
+  $info = &drupal_static(__FUNCTION__);
+  if (!isset($info)) {
+    $item = menu_get_item();
+    $info = array();
+    drupal_alter('noticeme_page_info', $info, $item);
+    $info = array_merge(noticeme_site_info(), $info);
   }
-  return $extra;
+  return $info;
+}
+
+function noticeme_noticeme_page_info_alter(&$info, $item) {
+  if ($item['page_callback'] == 'node_page_view') {
+    $node = $item['page_arguments'][0];
+    $info = array_merge($info, noticeme_get_entity_info('node', $node));
+  } else if ($item['page_callback'] == 'comment_permalink') {
+    $comment = comment_load($item['page_arguments'][0]);
+    $info = array_merge($info, noticeme_get_entity_info('comment', $comment));
+  } else if ($item['page_callback'] == 'user_view_page') {
+    $account = $item['page_arguments'][0];
+    $info = array_merge($info, noticeme_get_entity_info('user', $account));
+  }
 }
 
 /**
  * Implements hook_init().
+ * Add noticeme.js and write data into page head.
  */
 function noticeme_init() {
-  drupal_add_js(drupal_get_path('module', 'noticeme') . '/noticeme.js');
-  drupal_add_js(array('noticeme' => array(
-    'fblang' => variable_get('noticeme_fblang', 'en_US'),
-  )), 'setting');
+  global $language;
+  drupal_add_js(drupal_get_path('module', 'noticeme') . '/js/noticeme.js');
+  drupal_add_js(array('noticeme' => array('languages' => array(
+    'facebook' => variable_get('noticeme_' . $language->language . '_facebook', 'en_US'),
+    'google' => variable_get('noticeme_' . $language->language . '_google', 'en-US'),
+    'twitter' => variable_get('noticeme_' . $language->language . '_twitter', 'en'),
+  ))), 'setting');
+  $info = noticeme_page_info();
+  $headers = array();
+  $headers[] = array('property' => 'og:title', 'content' => @$info['title']);
+  $headers[] = array('property' => 'og:url', 'content' => @$info['url']);
+  $headers[] = array('property' => 'og:image', 'content' => @$info['image']);
+  $headers[] = array('property' => 'og:description', 'content' => @$info['description']);
+  $headers[] = array('property' => 'og:type', 'content' => @$info['og_type']);
+  $headers[] = array('property' => 'og:site_name', 'content' => variable_get('site_name'));
+
+  if (strlen(trim(variable_get('noticeme_fb_admins'))) > 0) {
+    $headers[] = array(
+      'property' => 'og:admins',
+      'content' => variable_get('noticeme_fb_admins'),
+    );
+  }
+  if (strlen(trim(variable_get('noticeme_fb_appid'))) > 0) {
+    $headers[] = array(
+      'property' => 'og:admins',
+      'content' => variable_get('noticeme_fb_appid'),
+    );
+  }
+  $headers[] = array('itemprop' => 'name', 'content' => $info['title']);
+  $headers[] = array('itemprop' => 'description', 'content' => $info['description']);
+  foreach ($headers as $key => $header) {
+    drupal_add_html_head(array(
+      '#tag' => 'meta',
+      '#attributes' => $header,
+    ), 'noticeme_' . $key);
+  }
 }
 
 /**
- * Implements hook_rdf_namespaces().
+ * Implements hook_preprocess_html().
  */
-function noticeme_rdf_namespaces() {
-  return array(
-    'fb'  => 'http://www.facebook.com/2008/fbml',
-  );
+function noticeme_preprocess_html(&$vars) {
+  $info = noticeme_page_info();
+  if ($type = @$info['schema_type']) {
+    $vars['rdf_namespaces'] .= ' itemscope itemtype="http://schema.org/' . $type . '"';
+  }
+}
+
+function noticeme_get_entity_info($entity_type, $entity) {
+  $info = array();
+  drupal_alter('noticeme_entity_info', $info, $entity_type, $entity);
+  $noticeme_field_ids = _noticeme_fields();
+  foreach (field_info_instances($entity_type, $entity->type) as $id => $field) {
+    if (in_array($id, $noticeme_field_ids)) {
+      if ($items = field_get_items($entity_type, $entity, $id)) {
+        foreach ($items as $item) {
+          foreach ($item as $key => $value) {
+            if ($key == 'image') {
+              $file = file_load($value);
+              if ($file) {
+                $info['image'] = file_create_url($file->uri);
+              }
+            } else if (strlen($value) > 0) {
+              $info[$key] = $value;
+            }
+          }
+        }
+      }
+    }
+  }
+  return $info;
+}
+
+function _noticeme_fields() {
+  $ids = array();
+  $info = field_info_fields();
+  foreach ($info as $id => $field) {
+    if ($field['type'] == 'noticeme') {
+      $ids[] = $id;
+    }
+  }
+  return $ids;
+}
+
+/**
+ * Build default data for predefined entities.
+ */
+function noticeme_noticeme_entity_info_alter(&$info, $entity_type, $entity) {
+  switch ($entity_type) {
+    case 'node':
+      $info['title'] = $entity->title;
+      if ($items = field_get_items('node', $entity, 'field_image')) {
+        $info['image'] = file_create_url($items[0]['uri']);
+      }
+      if ($items = field_get_items('node', $entity, 'body')) {
+        if (array_key_exists('safe_summary', $items[0])) {
+          if (drupal_strlen(trim($items[0]['safe_summary'])) > 0) {
+            $info['description'] = drupal_html_to_text($items[0]['safe_summary']);
+          } else if (drupal_strlen(trim($items[0]['safe_value'])) > 0) {
+            $info['description'] = drupal_html_to_text($items[0]['safe_value']);
+          }
+        }
+      }
+      $info['og_type'] = 'article';
+      $info['schema_type'] = 'Article';
+      break;
+
+    case 'comment':
+      $info['title'] = $entity->subject;
+      if ($items = field_get_items('comment', $entity, 'comment_body')) {
+        $info['description'] = drupal_html_to_text($items[0]['safe_value']);
+      }
+      $info['og_type'] = 'article';
+      $info['schema_type'] = 'Article';
+      break;
+
+    case 'user':
+      $info['title'] = $account->name;
+      $info['og_type'] = 'website';
+      $info['schema_type'] = 'Person';
+      break;
+  }
 }

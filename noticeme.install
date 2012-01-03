@@ -1,0 +1,32 @@
+<?php
+function noticeme_field_schema($field) {
+  return array(
+    'columns' => array(
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+      'og_type' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => FALSE,
+      ),
+      'schema_type' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'not null' => FALSE,
+      ),
+      'description' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
+      'image' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'indexes' => array(),
+  );
+}
