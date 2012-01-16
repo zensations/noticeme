@@ -49,6 +49,9 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
+    'noticeme_languages' => array(
+      'render element' => 'form',
+    ),
   );
 }
 

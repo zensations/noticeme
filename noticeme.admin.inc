@@ -28,11 +28,8 @@ function noticeme_admin_settings($form, &$form_state) {
     ),
   );
   $form['languages'] = array(
-    '#type' => 'fieldset',
+    '#theme' => 'noticeme_languages',
     '#title' => t('API Languages'),
-    'table' => array(
-      'rows' => array(),
-    ),
   );
 
   foreach (locale_language_list() as $id => $label) {
@@ -54,9 +51,31 @@ function noticeme_admin_settings($form, &$form_state) {
         '#default_value' => variable_get('noticeme_' . $id . '_twitter', 'en'),
       ),
     );
-    $form['languages']['table']['rows'][$id] = $row;
+    $form['languages'][$id] = $row;
   }
   return system_settings_form($form);
+}
+
+function theme_noticeme_languages($element) {
+  $languages = array(
+    '#theme' => 'table',
+    '#header' => array(
+      t('System'),
+      t('Facebook'),
+      t('Google'),
+      t('Twitter'),
+    ),
+    '#rows' => array(),
+  );
+  foreach (locale_language_list() as $id => $label) {
+    $languages['#rows'][$id] = array(
+      'system' => drupal_render($element['form'][$id]['system']),
+      'facebook' => drupal_render($element['form'][$id]['noticeme_' . $id . '_facebook']),
+      'google' => drupal_render($element['form'][$id]['noticeme_' . $id . '_google']),
+      'twitter' => drupal_render($element['form'][$id]['noticeme_' . $id . '_twitter']),
+    );
+  }
+  return drupal_render($languages);
 }
 
 function noticeme_admin_settings_validate(&$form, &$form_state) {
