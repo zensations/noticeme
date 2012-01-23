@@ -108,6 +108,7 @@ function noticeme_noticeme_page_info_alter(&$info, $item) {
  */
 function noticeme_init() {
   global $language;
+  drupal_add_css(drupal_get_path('module', 'noticeme') . '/noticeme.css');
   drupal_add_js(drupal_get_path('module', 'noticeme') . '/js/noticeme.js');
   drupal_add_js(array('noticeme' => array('languages' => array(
     'facebook' => variable_get('noticeme_' . $language->language . '_facebook', 'en_US'),
@@ -156,6 +157,9 @@ function noticeme_preprocess_html(&$vars) {
 }
 
 function noticeme_get_entity_info($entity_type, $entity) {
+  if (empty($entity->type)) {
+    return array();
+  }
   $info = array();
   drupal_alter('noticeme_entity_info', $info, $entity_type, $entity);
   $noticeme_field_ids = _noticeme_fields();
