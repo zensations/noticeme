@@ -1,12 +1,22 @@
 <?php
+/**
+ * @file
+ * Adds a field (called social media) for displaying facebook, google+ and
+ * twitter buttons and adds open graph as well as http://schema.org metadata
+ * to the html header.
+ */
+
 module_load_include('inc', 'noticeme', '/noticeme.field');
 module_load_include('inc', 'noticeme', '/noticeme.forms');
 
+/**
+ * Implements hook_menu().
+ */
 function noticeme_menu() {
   return array(
     'admin/config/search/noticeme' => array(
-      'title' => t('Noticeme'),
-      'description' => t('Configure global settings for social media buttons.'),
+      'title' => 'Noticeme',
+      'description' => 'Configure global settings for social media buttons.',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('noticeme_admin_settings'),
       'file' => 'noticeme.admin.inc',
@@ -15,8 +25,12 @@ function noticeme_menu() {
   );
 }
 
+/**
+ * Implements hook_theme().
+ */
 function noticeme_theme() {
   return array(
+    //theme facebook like button
     'facebook_like' => array(
       'variables' => array(
         'href' => FALSE,
@@ -29,6 +43,7 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
+    //theme google+ button
     'google_plus' => array(
       'variables' => array(
         'href' => FALSE,
@@ -37,6 +52,7 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
+    //theme twitter button
     'twitter_tweet' => array(
       'variables' => array(
         'url' => FALSE,
@@ -49,17 +65,23 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
+    //theme the languages table used in the noticeme settings page
+    //under admin/config/search/noticeme
     'noticeme_languages' => array(
       'render element' => 'form',
     ),
   );
 }
 
-
-
 /**
- * Build global site information. Will be overridden with data from noticeme_page_info().
+ * Collects site-global social media information.
+ *
+ * Will be overridden with data from noticeme_page_info().
  * @see hook_noticeme_site_info_alter()
+ *
+ * @return
+ *   An array with global social media information.
+ *   See noticeme_get_entity_info() for details.
  */
 function noticeme_site_info() {
   $info = array();
@@ -68,40 +90,65 @@ function noticeme_site_info() {
   $info['description'] = variable_get('site_slogan');
   if (strlen(theme_get_setting('logo_path')) > 0) {
     $info['image'] = file_create_url(theme_get_setting('logo_path'));
-  } else {
+  }
+  else {
     $info['image'] = FALSE;
   }
+
+  //let other modules alter our data
   drupal_alter('noticeme_site_info', $info);
   return $info;
 }
 
-
-
 /**
- * Build information for current page.
+ * Build social media information for current page/url.
+ *
+ * Uses data from noticeme_site_info() as default and lets other modules
+ * override this information.
  * @see hook_noticeme_page_info_alter()
  */
 function noticeme_page_info() {
   $info = &drupal_static(__FUNCTION__);
   if (!isset($info)) {
-    $item = menu_get_item();
-    $info = array();
-    drupal_alter('noticeme_page_info', $info, $item);
-    $info = array_merge(noticeme_site_info(), $info);
+    $menu_item = menu_get_item();
+
+    $info = array_merge(noticeme_site_info(), noticeme_get_default_page_info($menu_item));
+
+    //let other modules alter the page info
+    drupal_alter('noticeme_default_page_info', $info, $menu_item);
+
+    //let other modules set/override $info for the current entity
+    drupal_alter('noticeme_entity_info', $info, $menu_item);
+
+    $info = array_merge($info,noticeme_get_page_info($menu_item));
+    drupal_alter('noticeme_page_info', $info, $menu_item);
   }
   return $info;
 }
 
-function noticeme_noticeme_page_info_alter(&$info, $item) {
-  if ($item['page_callback'] == 'node_page_view') {
-    $node = $item['page_arguments'][0];
-    $info = array_merge($info, noticeme_get_entity_info('node', $node));
-  } else if ($item['page_callback'] == 'comment_permalink') {
-    $comment = comment_load($item['page_arguments'][0]);
-    $info = array_merge($info, noticeme_get_entity_info('comment', $comment));
-  } else if ($item['page_callback'] == 'user_view_page') {
-    $account = $item['page_arguments'][0];
-    $info = array_merge($info, noticeme_get_entity_info('user', $account));
+function noticeme_get_default_page_info($menu_item) {
+  switch($menu_item['page_callback']) {
+    case 'node_page_view':
+      return noticeme_get_predefined_entity_info('node', $menu_item['page_arguments'][0]);
+    case 'comment_permalink':
+      return noticeme_get_predefined_entity_info('comment', $menu_item['page_arguments'][0]);
+    case 'user_view_page':
+      return noticeme_get_predefined_entity_info('user', $menu_item['page_arguments'][0]);
+    default:
+      return array();
+  }
+}
+
+function noticeme_get_page_info($menu_item) {
+  switch($menu_item['page_callback']) {
+    case 'node_page_view':
+      return noticeme_get_entity_info('node',$menu_item['page_arguments'][0]);
+    case 'comment_permalink':
+      return noticeme_get_entity_info('comment', $menu_item['page_arguments'][0]);
+    case 'user_view_page':
+      return noticeme_get_entity_info('user', $menu_item['page_arguments'][0]);
+    default:
+      return array();
   }
 }
 
@@ -159,24 +206,47 @@ function noticeme_preprocess_html(&$vars) {
   }
 }
 
+/**
+ * Gets social media info for a given entity
+ *
+ * This lets other modules override $info for the current entity. Finally if
+ * social media information is set in the entity itself it uses this information
+ *
+ * @param $entity_type
+ *   The given entity's type
+ *
+ * @param $entity
+ *   The entity for which we're looking for social media information
+ *
+ * @return array
+ *   An associative array containing:
+ *   - title:       open graph title (og:title)
+ *   - og_type:     open graph type (og:type)
+ *   - schema_type: schema.org type (itemtype="http:/schema.org/[TYPE]")
+ *   - description: open graph description (og:description)
+ *   - image:       url to an image representing the current page/url
+ */
 function noticeme_get_entity_info($entity_type, $entity) {
   if (empty($entity->type)) {
     return array();
   }
-  $info = array();
-  drupal_alter('noticeme_entity_info', $info, $entity_type, $entity);
-  $noticeme_field_ids = _noticeme_fields();
+
+  $noticeme_field_ids = _noticeme_field_ids();
+
+  //override every noticeme info that has been set in the current entity
   foreach (field_info_instances($entity_type, $entity->type) as $id => $field) {
+    //iterate over all noticeme fields
     if (in_array($id, $noticeme_field_ids)) {
       if ($items = field_get_items($entity_type, $entity, $id)) {
         foreach ($items as $item) {
           foreach ($item as $key => $value) {
-            if ($key == 'image') {
+            if ($key == 'image' && strlen($value) > 0) {
               $file = file_load($value);
               if ($file) {
                 $info['image'] = file_create_url($file->uri);
               }
-            } else if (strlen($value) > 0) {
+            }
+            elseif (strlen($value) > 0) {
               $info[$key] = $value;
             }
           }
@@ -187,7 +257,10 @@ function noticeme_get_entity_info($entity_type, $entity) {
   return $info;
 }
 
-function _noticeme_fields() {
+/**
+ * Get the ids of all noticeme fields
+ */
+function _noticeme_field_ids() {
   $ids = array();
   $info = field_info_fields();
   foreach ($info as $id => $field) {
@@ -199,9 +272,18 @@ function _noticeme_fields() {
 }
 
 /**
- * Build default data for predefined entities.
+ * Default implementation for getting social media info of predefined entity types.
+ *
+ * Builds info for the predefined entity types (node, comment, user) from the entity
+ * itself. This can be overriden by modules which implement
+ * hook_noticeme_entity_info_alter() and by setting social media info in the entity.
+ *
+ * @return array
+ *   An Associative array containing social media info.
+ *   See noticeme_get_entity_info() for details
  */
-function noticeme_noticeme_entity_info_alter(&$info, $entity_type, $entity) {
+function noticeme_get_predefined_entity_info($entity_type, $entity) {
+  $info = array();
   switch ($entity_type) {
     case 'node':
       $info['title'] = $entity->title;
@@ -212,7 +294,8 @@ function noticeme_noticeme_entity_info_alter(&$info, $entity_type, $entity) {
         if (array_key_exists('safe_summary', $items[0])) {
           if (drupal_strlen(trim($items[0]['safe_summary'])) > 0) {
             $info['description'] = drupal_html_to_text($items[0]['safe_summary']);
-          } else if (drupal_strlen(trim($items[0]['safe_value'])) > 0) {
+          }
+          elseif (drupal_strlen(trim($items[0]['safe_value'])) > 0) {
             $info['description'] = drupal_html_to_text($items[0]['safe_value']);
           }
         }
@@ -236,4 +319,5 @@ function noticeme_noticeme_entity_info_alter(&$info, $entity_type, $entity) {
       $info['schema_type'] = 'Person';
       break;
   }
+  return $info;
 }

@@ -14,3 +14,4 @@ TODOS:
 - vertical tab summary
 - integrität bei mehreren instances prüfen
 - globale bilddatei
+- alle möglichkeiten testen
