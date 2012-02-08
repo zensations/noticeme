@@ -11,7 +11,7 @@ module_load_include('inc', 'noticeme', '/noticeme.forms');
 
 /**
  * Implements hook_init().
- * Add noticeme.js and write data into page head.
+ * Add noticeme.js and write social media data into page head.
  */
 function noticeme_init() {
   global $language;
@@ -128,14 +128,43 @@ function noticeme_theme() {
 }
 
 /**
- * Collects site-global social media information.
+ * Build social media information for current page/url.
  *
- * Will be overridden with data from noticeme_page_info().
- * @see hook_noticeme_site_info_alter()
+ * Uses data from noticeme_site_info() as default, overrides it with data extracted
+ * from the entity, data stored in noticeme fields and finally
+ * hook_noticeme_field_info_alter().
  *
  * @return
  *   An array with global social media information.
- *   See noticeme_get_entity_info() for details.
+ *   See noticeme_get_info_from_entity_noticeme_field() for details.
+ */
+function noticeme_page_info() {
+  $info = &drupal_static(__FUNCTION__);
+  if (!isset($info)) {
+    $menu_item = menu_get_item();
+
+    //default to global values and override with info extracted from the entity
+    $info = array_merge(noticeme_site_info(), noticeme_entity_info($menu_item));
+    //let other modules extract info from entity types they define
+    drupal_alter('noticeme_entity_info', $info, $menu_item);
+
+    //override with info stored in the entity's noticeme field
+    $info = array_merge($info, noticeme_field_info($info, $menu_item));
+    //let other modules set info for noticeme fields that are attached to entity types they define
+    drupal_alter('noticeme_field_info', $info, $menu_item);
+  }
+  return $info;
+}
+
+/**
+ * Collects site-global social media information.
+ *
+ * This data will be overridden by data stored in entities and data stored in
+ * noticeme fields.
+ *
+ * @return
+ *   An array with global social media information.
+ *   See noticeme_get_info_from_entity_noticeme_field() for details.
  */
 function noticeme_site_info() {
   $info = array();
@@ -149,64 +178,62 @@ function noticeme_site_info() {
     $info['image'] = FALSE;
   }
 
-  //let other modules alter our data
+  //let other modules alter global info
   drupal_alter('noticeme_site_info', $info);
   return $info;
 }
 
 /**
- * Build social media information for current page/url.
+ * Build social media info from data stored in the entity.
  *
- * Uses data from noticeme_site_info() as default and lets other modules
- * override this information.
- * @see hook_noticeme_page_info_alter()
- */
-function noticeme_page_info() {
-  $info = &drupal_static(__FUNCTION__);
-  if (!isset($info)) {
-    $menu_item = menu_get_item();
+ * Collects info from predefined entities. For custom entity types implement
+ * hook_noticeme_entity_info_alter() which is called after this function.
+ * @see noticeme_page_info().
 
-    $info = array_merge(noticeme_site_info(), noticeme_get_default_page_info($menu_item));
-    drupal_alter('noticeme_entity_info', $info, $menu_item);
-    $info = array_merge($info,noticeme_get_page_info_from_entity($menu_item));
-    drupal_alter('noticeme_page_info', $info, $menu_item);
-  }
-  return $info;
-}
-
-/**
- * 
+ * @param $menu_item
+ *   The current page's menu router item.
+ *
+ * @return
+ *   An array with global social media information.
+ *   See noticeme_get_info_from_entity_noticeme_field() for details.
  */
-function noticeme_get_default_page_info($menu_item) {
+function noticeme_entity_info($menu_item) {
   switch($menu_item['page_callback']) {
     case 'node_page_view':
-      $page_info = noticeme_get_predefined_entity_info('node', $menu_item['page_arguments'][0]);
+      $page_info = noticeme_get_info_from_predefined_entity_data('node', $menu_item['page_arguments'][0]);
+      break;
+
     case 'comment_permalink':
-      $page_info = noticeme_get_predefined_entity_info('comment', $menu_item['page_arguments'][0]);
+      $page_info = noticeme_get_info_from_predefined_entity_data('comment', $menu_item['page_arguments'][0]);
+      break;
+
     case 'user_view_page':
-      $page_info = noticeme_get_predefined_entity_info('user', $menu_item['page_arguments'][0]);
+      $page_info = noticeme_get_info_from_predefined_entity_data('user', $menu_item['page_arguments'][0]);
+      break;
+
     default:
       $page_info = array();
   }
-
-  //let other modules implement
-  drupal_alter('noticeme_default_page_info', $page_info, $menu_item);
   return $page_info;
 }
 
 /**
- * Default implementation for getting social media info of predefined entity types.
+ * Build social media info out of predefined entity types.
  *
- * Builds info for the predefined entity types (node, comment, user) by using data
- * stored in the entity. This can be overriden by modules which implement
- * hook_noticeme_entity_info_alter() or by attaching noticeme fields to the entity
- * and setting the values there.
+ * Builds info for the entity types node, comment and user by using data
+ * stored in the entity (like node title, image fields,...).
+ *
+ * @param $entity_type
+ *   The entity's type
+ *
+ * @param $entity
+ *   The entity for which we extract social media info.
  *
  * @return array
  *   An associative array containing social media info.
- *   See noticeme_get_entity_info() for details.
+ *   See noticeme_get_info_from_entity_noticeme_field() for details.
  */
-function noticeme_get_predefined_entity_info($entity_type, $entity) {
+function noticeme_get_info_from_predefined_entity_data($entity_type, $entity) {
   $info = array();
   switch ($entity_type) {
     case 'node':
@@ -246,25 +273,43 @@ function noticeme_get_predefined_entity_info($entity_type, $entity) {
   return $info;
 }
 
-function noticeme_get_page_info_from_entity($menu_item) {
+/*
+ * Builds social media info from a noticeme field.
+ *
+ * Builds info by getting it from a noticeme field which is attached to the entity
+ * type we're displaying on the current page.
+ *
+ * @param $menu_item
+ *   The current page's menu router item
+ *
+ * @return
+ *   An array with global social media information.
+ *   See noticeme_get_info_from_entity_noticeme_field() for details.
+ */
+function noticeme_field_info($menu_item) {
   switch($menu_item['page_callback']) {
     case 'node_page_view':
-      return noticeme_get_entity_info('node',$menu_item['page_arguments'][0]);
+      $info = noticeme_get_info_from_entity_noticeme_field('node',$menu_item['page_arguments'][0]);
+      break;
+
     case 'comment_permalink':
-      return noticeme_get_entity_info('comment', $menu_item['page_arguments'][0]);
+      $info = noticeme_get_info_from_entity_noticeme_field('comment', $menu_item['page_arguments'][0]);
+      break;
+
     case 'user_view_page':
-      return noticeme_get_entity_info('user', $menu_item['page_arguments'][0]);
+      $info = noticeme_get_info_from_entity_noticeme_field('user', $menu_item['page_arguments'][0]);
+      break;
+
     default:
-      return array();
+      $info = array();
   }
+  return $info;
 }
 
 /**
- * Gets social media info for a given entity
+ * Gets social media info for a given entity's noticeme field.
  *
- * This collects social media information from an entity's noticeme field.
- * Values set in the entity will override any values set by any other
- * method or hook.
+ * @see noticeme_page_info().
  *
  * @param $entity_type
  *   The given entity's type
@@ -280,18 +325,19 @@ function noticeme_get_page_info_from_entity($menu_item) {
  *   - description: open graph description (og:description)
  *   - image:       url to an image representing the current page/url
  */
-function noticeme_get_entity_info($entity_type, $entity) {
+function noticeme_get_info_from_entity_noticeme_field($entity_type, $entity) {
   if (empty($entity->type)) {
     return array();
   }
   $noticeme_field_ids = _noticeme_field_ids();
 
-  //override every noticeme info that has been set in the current entity
   foreach (field_info_instances($entity_type, $entity->type) as $id => $field) {
-    //iterate over all noticeme fields
+    //iterate only over noticeme fields
     if (in_array($id, $noticeme_field_ids)) {
       if ($items = field_get_items($entity_type, $entity, $id)) {
+        //for all noticeme fields attached to the entity
         foreach ($items as $item) {
+          //add all values set in the entity to $info
           foreach ($item as $key => $value) {
             if ($key == 'image' && strlen($value) > 0) {
               $file = file_load($value);
