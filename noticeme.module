@@ -10,6 +10,60 @@ module_load_include('inc', 'noticeme', '/noticeme.field');
 module_load_include('inc', 'noticeme', '/noticeme.forms');
 
 /**
+ * Implements hook_init().
+ * Add noticeme.js and write data into page head.
+ */
+function noticeme_init() {
+  global $language;
+  drupal_add_css(drupal_get_path('module', 'noticeme') . '/noticeme.css');
+  drupal_add_js(drupal_get_path('module', 'noticeme') . '/js/noticeme.js');
+  drupal_add_js(array('noticeme' => array('languages' => array(
+    'facebook' => variable_get('noticeme_' . $language->language . '_facebook', 'en_US'),
+    'google' => variable_get('noticeme_' . $language->language . '_google', 'en-US'),
+    'twitter' => variable_get('noticeme_' . $language->language . '_twitter', 'en'),
+  ))), 'setting');
+  $info = noticeme_page_info();
+  $headers = array();
+  $headers[] = array('property' => 'og:title', 'content' => @$info['title']);
+  $headers[] = array('property' => 'og:url', 'content' => @$info['url']);
+  $headers[] = array('property' => 'og:image', 'content' => @$info['image']);
+  $headers[] = array('property' => 'og:description', 'content' => @$info['description']);
+  $headers[] = array('property' => 'og:type', 'content' => @$info['og_type']);
+  $headers[] = array('property' => 'og:site_name', 'content' => variable_get('site_name'));
+
+  if (strlen(trim(variable_get('noticeme_fb_admins'))) > 0) {
+    $headers[] = array(
+      'property' => 'og:admins',
+      'content' => variable_get('noticeme_fb_admins'),
+    );
+  }
+  if (strlen(trim(variable_get('noticeme_fb_appid'))) > 0) {
+    $headers[] = array(
+      'property' => 'og:admins',
+      'content' => variable_get('noticeme_fb_appid'),
+    );
+  }
+  $headers[] = array('itemprop' => 'name', 'content' => $info['title']);
+  $headers[] = array('itemprop' => 'description', 'content' => $info['description']);
+  foreach ($headers as $key => $header) {
+    drupal_add_html_head(array(
+      '#tag' => 'meta',
+      '#attributes' => $header,
+    ), 'noticeme_' . $key);
+  }
+}
+
+/**
+ * Implements hook_preprocess_html().
+ */
+function noticeme_preprocess_html(&$vars) {
+  $info = noticeme_page_info();
+  if ($type = @$info['schema_type']) {
+    $vars['rdf_namespaces'] .= ' itemscope itemtype="http://schema.org/' . $type . '"';
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function noticeme_menu() {
@@ -113,174 +167,44 @@ function noticeme_page_info() {
     $menu_item = menu_get_item();
 
     $info = array_merge(noticeme_site_info(), noticeme_get_default_page_info($menu_item));
-
-    //let other modules alter the page info
-    drupal_alter('noticeme_default_page_info', $info, $menu_item);
-
-    //let other modules set/override $info for the current entity
     drupal_alter('noticeme_entity_info', $info, $menu_item);
-
-    $info = array_merge($info,noticeme_get_page_info($menu_item));
+    $info = array_merge($info,noticeme_get_page_info_from_entity($menu_item));
     drupal_alter('noticeme_page_info', $info, $menu_item);
   }
   return $info;
 }
 
+/**
+ * 
+ */
 function noticeme_get_default_page_info($menu_item) {
   switch($menu_item['page_callback']) {
     case 'node_page_view':
-      return noticeme_get_predefined_entity_info('node', $menu_item['page_arguments'][0]);
+      $page_info = noticeme_get_predefined_entity_info('node', $menu_item['page_arguments'][0]);
     case 'comment_permalink':
-      return noticeme_get_predefined_entity_info('comment', $menu_item['page_arguments'][0]);
+      $page_info = noticeme_get_predefined_entity_info('comment', $menu_item['page_arguments'][0]);
     case 'user_view_page':
-      return noticeme_get_predefined_entity_info('user', $menu_item['page_arguments'][0]);
+      $page_info = noticeme_get_predefined_entity_info('user', $menu_item['page_arguments'][0]);
     default:
-      return array();
-  }
-}
-
-function noticeme_get_page_info($menu_item) {
-  switch($menu_item['page_callback']) {
-    case 'node_page_view':
-      return noticeme_get_entity_info('node',$menu_item['page_arguments'][0]);
-    case 'comment_permalink':
-      return noticeme_get_entity_info('comment', $menu_item['page_arguments'][0]);
-    case 'user_view_page':
-      return noticeme_get_entity_info('user', $menu_item['page_arguments'][0]);
-    default:
-      return array();
-  }
-}
-
-/**
- * Implements hook_init().
- * Add noticeme.js and write data into page head.
- */
-function noticeme_init() {
-  global $language;
-  drupal_add_css(drupal_get_path('module', 'noticeme') . '/noticeme.css');
-  drupal_add_js(drupal_get_path('module', 'noticeme') . '/js/noticeme.js');
-  drupal_add_js(array('noticeme' => array('languages' => array(
-    'facebook' => variable_get('noticeme_' . $language->language . '_facebook', 'en_US'),
-    'google' => variable_get('noticeme_' . $language->language . '_google', 'en-US'),
-    'twitter' => variable_get('noticeme_' . $language->language . '_twitter', 'en'),
-  ))), 'setting');
-  $info = noticeme_page_info();
-  $headers = array();
-  $headers[] = array('property' => 'og:title', 'content' => @$info['title']);
-  $headers[] = array('property' => 'og:url', 'content' => @$info['url']);
-  $headers[] = array('property' => 'og:image', 'content' => @$info['image']);
-  $headers[] = array('property' => 'og:description', 'content' => @$info['description']);
-  $headers[] = array('property' => 'og:type', 'content' => @$info['og_type']);
-  $headers[] = array('property' => 'og:site_name', 'content' => variable_get('site_name'));
-
-  if (strlen(trim(variable_get('noticeme_fb_admins'))) > 0) {
-    $headers[] = array(
-      'property' => 'og:admins',
-      'content' => variable_get('noticeme_fb_admins'),
-    );
-  }
-  if (strlen(trim(variable_get('noticeme_fb_appid'))) > 0) {
-    $headers[] = array(
-      'property' => 'og:admins',
-      'content' => variable_get('noticeme_fb_appid'),
-    );
-  }
-  $headers[] = array('itemprop' => 'name', 'content' => $info['title']);
-  $headers[] = array('itemprop' => 'description', 'content' => $info['description']);
-  foreach ($headers as $key => $header) {
-    drupal_add_html_head(array(
-      '#tag' => 'meta',
-      '#attributes' => $header,
-    ), 'noticeme_' . $key);
-  }
-}
-
-/**
- * Implements hook_preprocess_html().
- */
-function noticeme_preprocess_html(&$vars) {
-  $info = noticeme_page_info();
-  if ($type = @$info['schema_type']) {
-    $vars['rdf_namespaces'] .= ' itemscope itemtype="http://schema.org/' . $type . '"';
-  }
-}
-
-/**
- * Gets social media info for a given entity
- *
- * This lets other modules override $info for the current entity. Finally if
- * social media information is set in the entity itself it uses this information
- *
- * @param $entity_type
- *   The given entity's type
- *
- * @param $entity
- *   The entity for which we're looking for social media information
- *
- * @return array
- *   An associative array containing:
- *   - title:       open graph title (og:title)
- *   - og_type:     open graph type (og:type)
- *   - schema_type: schema.org type (itemtype="http:/schema.org/[TYPE]")
- *   - description: open graph description (og:description)
- *   - image:       url to an image representing the current page/url
- */
-function noticeme_get_entity_info($entity_type, $entity) {
-  if (empty($entity->type)) {
-    return array();
+      $page_info = array();
   }
 
-  $noticeme_field_ids = _noticeme_field_ids();
-
-  //override every noticeme info that has been set in the current entity
-  foreach (field_info_instances($entity_type, $entity->type) as $id => $field) {
-    //iterate over all noticeme fields
-    if (in_array($id, $noticeme_field_ids)) {
-      if ($items = field_get_items($entity_type, $entity, $id)) {
-        foreach ($items as $item) {
-          foreach ($item as $key => $value) {
-            if ($key == 'image' && strlen($value) > 0) {
-              $file = file_load($value);
-              if ($file) {
-                $info['image'] = file_create_url($file->uri);
-              }
-            }
-            elseif (strlen($value) > 0) {
-              $info[$key] = $value;
-            }
-          }
-        }
-      }
-    }
-  }
-  return $info;
-}
-
-/**
- * Get the ids of all noticeme fields
- */
-function _noticeme_field_ids() {
-  $ids = array();
-  $info = field_info_fields();
-  foreach ($info as $id => $field) {
-    if ($field['type'] == 'noticeme') {
-      $ids[] = $id;
-    }
-  }
-  return $ids;
+  //let other modules implement
+  drupal_alter('noticeme_default_page_info', $page_info, $menu_item);
+  return $page_info;
 }
 
 /**
  * Default implementation for getting social media info of predefined entity types.
  *
- * Builds info for the predefined entity types (node, comment, user) from the entity
- * itself. This can be overriden by modules which implement
- * hook_noticeme_entity_info_alter() and by setting social media info in the entity.
+ * Builds info for the predefined entity types (node, comment, user) by using data
+ * stored in the entity. This can be overriden by modules which implement
+ * hook_noticeme_entity_info_alter() or by attaching noticeme fields to the entity
+ * and setting the values there.
  *
  * @return array
- *   An Associative array containing social media info.
- *   See noticeme_get_entity_info() for details
+ *   An associative array containing social media info.
+ *   See noticeme_get_entity_info() for details.
  */
 function noticeme_get_predefined_entity_info($entity_type, $entity) {
   $info = array();
@@ -320,4 +244,82 @@ function noticeme_get_predefined_entity_info($entity_type, $entity) {
       break;
   }
   return $info;
+}
+
+function noticeme_get_page_info_from_entity($menu_item) {
+  switch($menu_item['page_callback']) {
+    case 'node_page_view':
+      return noticeme_get_entity_info('node',$menu_item['page_arguments'][0]);
+    case 'comment_permalink':
+      return noticeme_get_entity_info('comment', $menu_item['page_arguments'][0]);
+    case 'user_view_page':
+      return noticeme_get_entity_info('user', $menu_item['page_arguments'][0]);
+    default:
+      return array();
+  }
+}
+
+/**
+ * Gets social media info for a given entity
+ *
+ * This collects social media information from an entity's noticeme field.
+ * Values set in the entity will override any values set by any other
+ * method or hook.
+ *
+ * @param $entity_type
+ *   The given entity's type
+ *
+ * @param $entity
+ *   The entity for which we're looking for social media information
+ *
+ * @return array
+ *   An associative array containing:
+ *   - title:       open graph title (og:title)
+ *   - og_type:     open graph type (og:type)
+ *   - schema_type: schema.org type (itemtype="http:/schema.org/[TYPE]")
+ *   - description: open graph description (og:description)
+ *   - image:       url to an image representing the current page/url
+ */
+function noticeme_get_entity_info($entity_type, $entity) {
+  if (empty($entity->type)) {
+    return array();
+  }
+  $noticeme_field_ids = _noticeme_field_ids();
+
+  //override every noticeme info that has been set in the current entity
+  foreach (field_info_instances($entity_type, $entity->type) as $id => $field) {
+    //iterate over all noticeme fields
+    if (in_array($id, $noticeme_field_ids)) {
+      if ($items = field_get_items($entity_type, $entity, $id)) {
+        foreach ($items as $item) {
+          foreach ($item as $key => $value) {
+            if ($key == 'image' && strlen($value) > 0) {
+              $file = file_load($value);
+              if ($file) {
+                $info['image'] = file_create_url($file->uri);
+              }
+            }
+            elseif (strlen($value) > 0) {
+              $info[$key] = $value;
+            }
+          }
+        }
+      }
+    }
+  }
+  return $info;
+}
+
+/**
+ * Get the ids of all noticeme fields
+ */
+function _noticeme_field_ids() {
+  $ids = array();
+  $info = field_info_fields();
+  foreach ($info as $id => $field) {
+    if ($field['type'] == 'noticeme') {
+      $ids[] = $id;
+    }
+  }
+  return $ids;
 }
