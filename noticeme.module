@@ -11,6 +11,7 @@ module_load_include('inc', 'noticeme', '/noticeme.forms');
 
 /**
  * Implements hook_init().
+ *
  * Add noticeme.js and write social media data into page head.
  */
 function noticeme_init() {
@@ -84,7 +85,7 @@ function noticeme_menu() {
  */
 function noticeme_theme() {
   return array(
-    //theme facebook like button
+    // Theme facebook like button.
     'facebook_like' => array(
       'variables' => array(
         'href' => FALSE,
@@ -97,7 +98,7 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
-    //theme google+ button
+    // Theme google+ button.
     'google_plus' => array(
       'variables' => array(
         'href' => FALSE,
@@ -106,7 +107,7 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
-    //theme twitter button
+    // Theme twitter button.
     'twitter_tweet' => array(
       'variables' => array(
         'url' => FALSE,
@@ -119,8 +120,8 @@ function noticeme_theme() {
       ),
       'file' => 'noticeme.theme.inc',
     ),
-    //theme the languages table used in the noticeme settings page
-    //under admin/config/search/noticeme
+    // Theme the languages table used in the noticeme settings page
+    // under 'admin/config/search/noticeme'.
     'noticeme_languages' => array(
       'render element' => 'form',
     ),
@@ -143,21 +144,21 @@ function noticeme_page_metadata() {
   if (!isset($metadata)) {
     $menu_item = menu_get_item();
 
-    //default to global values and override with metadata extracted from the entity
+    // Default to global values and override with metadata extracted from the entity.
     $metadata = array_merge(noticeme_site_metadata(), noticeme_entity_metadata($menu_item));
-    //let other modules extract metadata from entity types they define
+    // Let other modules extract metadata from entity types they define.
     drupal_alter('noticeme_entity_metadata', $metadata, $menu_item);
 
-    //override with metadata stored in the entity's noticeme field
+    // Override with metadata stored in the entity's noticeme field.
     $metadata = array_merge($metadata, noticeme_field_metadata($menu_item));
-    //let other modules set metadata for noticeme fields that are attached to entity types they define
+    // Let other modules set metadata for noticeme fields that are attached to entity types they define.
     drupal_alter('noticeme_field_metadata', $metadata, $menu_item);
   }
   return $metadata;
 }
 
 /**
- * Collects site-global social media metadata.
+ * Build site-global social media metadata.
  *
  * This data will be overridden by data stored in entities and data stored in
  * noticeme fields.
@@ -169,8 +170,16 @@ function noticeme_page_metadata() {
 function noticeme_site_metadata() {
   $metadata = array();
   $metadata['url'] = url(request_path(), array('absolute' => TRUE));
-  $metadata['title'] = variable_get('site_name');
-  $metadata['description'] = variable_get('site_slogan');
+
+  // Default to site_name if no global title is set.
+  $metadata['title'] = variable_get('noticeme_title', variable_get('site_name'));
+
+  // Default to site_slogan if no global description is set.
+  $metadata['description'] = variable_get('noticeme_description', variable_get('site_slogan'));
+
+  $metadata['og_type'] = variable_get('noticeme_og_type', FALSE);
+  $metadata['schema_type'] = variable_get('noticeme_schema_type', FALSE);
+
   if (strlen(theme_get_setting('logo_path')) > 0) {
     $metadata['image'] = file_create_url(theme_get_setting('logo_path'));
   }
@@ -178,7 +187,7 @@ function noticeme_site_metadata() {
     $metadata['image'] = FALSE;
   }
 
-  //let other modules alter global metadata
+  // Let other modules alter global metadata.
   drupal_alter('noticeme_site_metadata', $metadata);
   return $metadata;
 }
@@ -198,7 +207,7 @@ function noticeme_site_metadata() {
  *   See noticeme_get_metadata_from_entity_noticeme_field() for details.
  */
 function noticeme_entity_metadata($menu_item) {
-  switch($menu_item['page_callback']) {
+  switch ($menu_item['page_callback']) {
     case 'node_page_view':
       $page_metadata = noticeme_get_metadata_from_predefined_entity_data('node', $menu_item['page_arguments'][0]);
       break;
@@ -287,9 +296,9 @@ function noticeme_get_metadata_from_predefined_entity_data($entity_type, $entity
  *   See noticeme_get_metadata_from_entity_noticeme_field() for details.
  */
 function noticeme_field_metadata($menu_item) {
-  switch($menu_item['page_callback']) {
+  switch ($menu_item['page_callback']) {
     case 'node_page_view':
-      $metadata = noticeme_get_metadata_from_entity_noticeme_field('node',$menu_item['page_arguments'][0]);
+      $metadata = noticeme_get_metadata_from_entity_noticeme_field('node', $menu_item['page_arguments'][0]);
       break;
 
     case 'comment_permalink':
@@ -332,12 +341,12 @@ function noticeme_get_metadata_from_entity_noticeme_field($entity_type, $entity)
   $noticeme_field_ids = _noticeme_field_ids();
 
   foreach (field_info_instances($entity_type, $entity->type) as $id => $field) {
-    //iterate only over noticeme fields
+    // Iterate only over noticeme fields.
     if (in_array($id, $noticeme_field_ids)) {
       if ($items = field_get_items($entity_type, $entity, $id)) {
-        //for all noticeme fields attached to the entity
+        // For all noticeme fields attached to the entity...
         foreach ($items as $item) {
-          //add all values set in the entity to $metadata
+          // ...add all values set in the entity to $metadata.
           foreach ($item as $key => $value) {
             if ($key == 'image' && strlen($value) > 0) {
               $file = file_load($value);

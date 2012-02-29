@@ -1,21 +1,33 @@
 <?php
+/**
+ * @file
+ * 
+ */
+
+/**
+ * Menu callback: 'admin/config/search/noticeme'.
+ */
 function noticeme_admin_settings($form, &$form_state) {
+  // Fetch stored global default metadata values.
   $values = array(
     'title' => variable_get('noticeme_title', ''),
     'og_type' => variable_get('noticeme_og_type', ''),
     'schema_type' => variable_get('noticeme_schema_type', ''),
     'description' => variable_get('noticeme_description', ''),
-    'image' => variable_get('noticeme_image', ''),
   );
+
   $form['metadata'] = array(
     '#type' => 'fieldset',
     '#title' => t('Global metadata'),
+    // Displays the form for global default metadata values.
     'form' => _noticeme_settings_form($values),
   );
+
   unset($form['metadata']['form']['image']);
+
   $form['configuration'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Sitewide configuration'),
+    '#title' => t('Sitewide Facebook configuration'),
     'noticeme_fb_admins' => array(
       '#type' => 'textfield',
       '#title' => t('Facebook administrators'),
@@ -32,7 +44,9 @@ function noticeme_admin_settings($form, &$form_state) {
     '#title' => t('API Languages'),
   );
 
-  foreach (locale_language_list() as $id => $label) {
+  // Allow the admin to set different languages for fb, twitter and google,
+  // depending on the current users language.
+  foreach (_noticeme_language_list as $id => $label) {
     $row = array(
       'system' => array('#markup' => $label),
       'noticeme_' . $id . '_facebook' => array(
@@ -55,7 +69,41 @@ function noticeme_admin_settings($form, &$form_state) {
   }
   return system_settings_form($form);
 }
+/**
+ * Validate handler for noticeme_admin_settings() form.
+ */
+function noticeme_admin_settings_validate(&$form, &$form_state) {
+  $keys = array('title', 'og_type', 'schema_type', 'description');
+  foreach ($keys as $key) {
+    $form_state['values']['noticeme_' . $key] = $form_state['values'][$key];
+    unset($form_state['values'][$key]);
+  }
+}
 
+/**
+ * Get currently installed languages.
+ *
+ * @return
+ *   An array of currently installed languages in the way
+ *   locale_language_list() does. if the locale module is not active it creates an
+ *   equivalent array consisting of only the default language (english)
+ */
+function _noticeme_language_list() {
+  global $language;
+  if (module_exists('locale')) {
+    return locale_language_list();
+  }
+  else {
+    // If the locale module is not active, there can only be the current language.
+    return array($language->language => $language->name);
+  }
+}
+
+/**
+ * Themes the languages table used in the noticeme settings page.
+ *
+ * Used on admin/config/search/noticeme.
+ */
 function theme_noticeme_languages($element) {
   $languages = array(
     '#theme' => 'table',
@@ -67,7 +115,7 @@ function theme_noticeme_languages($element) {
     ),
     '#rows' => array(),
   );
-  foreach (locale_language_list() as $id => $label) {
+  foreach (_noticeme_language_list() as $id => $label) {
     $languages['#rows'][$id] = array(
       'system' => drupal_render($element['form'][$id]['system']),
       'facebook' => drupal_render($element['form'][$id]['noticeme_' . $id . '_facebook']),
@@ -78,14 +126,13 @@ function theme_noticeme_languages($element) {
   return drupal_render($languages);
 }
 
-function noticeme_admin_settings_validate(&$form, &$form_state) {
-  $keys = array('title', 'og_type', 'schema_type', 'description');
-  foreach ($keys as $key) {
-    $form_state['values']['noticeme_' . $key] = $form_state['values'][$key];
-    unset($form_state['values'][$key]);
-  }
-}
-
+/**
+ * Returns an array of languages available on facebook.
+ *
+ * Copied from
+ * http://www.facebook.com/ajax/intl/language_dialog.php?uri=http%3A%2F%2Fwww.facebook.com%2Ftranslations%2Fprefs.php
+ * You need to be logged in to see this.
+ */
 function _noticeme_facebook_languages() {
   return array(
     'af_ZA' => 'Afrikaans',
@@ -168,6 +215,11 @@ function _noticeme_facebook_languages() {
   );
 }
 
+/**
+ * Returns an array of languages available on google+
+ *
+ * Copied from https://www.google.com/settings/language (you need to be logged in).
+ */
 function _noticeme_google_languages() {
   return array(
     'ar' => 'Arabic',
@@ -217,6 +269,12 @@ function _noticeme_google_languages() {
   );
 }
 
+/**
+ * Returns an array of languages available on twitter
+ *
+ * Copied from https://twitter.com/settings/account.
+ * You need to be logged in to see this.
+ */
 function _noticeme_twitter_languages() {
   return array(
     'hi' => 'Hindi',
