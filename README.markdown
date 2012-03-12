@@ -9,18 +9,16 @@ TODOS:
 - kommentieren
     noticeme.module [DONE]
     noticeme.admin.inc [DONE]
-    noticeme.fields.inc
+    noticeme.fields.inc [DONE]
     noticeme.forms.inc [DONE]
     noticeme.install [DONE]
-    noticeme.theme.inc
-    js/noticeme.js
-    js/noticeme_forms.js
+    noticeme.theme.inc [DONE]
+    js/noticeme.js [DONE]
+    js/noticeme_forms.js [DONE]
 
-- dependencies
 - globale bilddatei
 - globaler like-button block (aktuelle seite oder gesamte seite?)
-- styling vor async load der buttons
-- formulare überarbeiten, texten
-- vertical tab summary
+- vertical tabs rausnehmen
+- clean uninstall
 - integrität bei mehreren instances prüfen
 - alle möglichkeiten testen

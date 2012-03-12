@@ -57,7 +57,8 @@ function noticeme_field_formatter_settings_form($field, $instance, $view_mode, $
 function _noticeme_field_formatter_settings_validate($element, &$form_state, $form) {
   $field = $form_state['formatter_settings_edit'];
   $values = &$form_state['values']['fields'][$field]['settings_edit_form']['settings'];
-  // where are those values used?
+  // We rewrite those settings here so the settings array can be used more easily
+  // in noticeme_field_formatter_view().
   foreach ($values as $network => $settings) {
     foreach ($settings as $key => $value) {
       $values[$network . '_' . $key] = $value;
@@ -94,6 +95,8 @@ function noticeme_field_formatter_view($entity_type, $entity, $field, $instance,
   $url = url($url['path'], array('absolute' => TRUE));
   $element = array();
   foreach (array_keys($items) as $delta) {
+    // The values in $display['settings'] are written in
+    // _noticeme_field_formatter_settings_validate() to be used here.
     if ($display['settings']['facebook_display'] != 'hidden') {
       $element[$delta] = array(
         '#prefix' => '<div class="noticeme-buttons">',
@@ -142,9 +145,11 @@ function noticeme_field_widget_info() {
   );
 }
 
+/**
+ * Implements hook_field_widget_form().
+ */
 function noticeme_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['#type'] = 'fieldset';
-  $element['#group'] = 'additional_settings';
   $element['#attached']['js'][] = drupal_get_path('module', 'noticeme') . '/js/noticeme_form.js';
   $element['#attributes']['class'][] = 'noticeme-configuration';
   $element['#element_submit'] = array('noticeme_widget_submit');
@@ -154,6 +159,10 @@ function noticeme_field_widget_form(&$form, &$form_state, $field, $instance, $la
   return $element;
 }
 
+
+/**
+ * Implements hook_field_is_empty().
+ */
 function noticeme_field_is_empty($item, $field) {
   // the field is never empty and should even be displayed without data
   return FALSE;
@@ -166,6 +175,7 @@ function noticeme_field_presave($entity_type, $entity, $field, $instance, $langc
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
   foreach ($items as $item) {
     $file = file_load($item['image']);
+    // If the user set an image, make it permanent.
     if (!empty($file) && !$file->status) {
       $file->status = FILE_STATUS_PERMANENT;
       file_save($file);

@@ -1,6 +1,12 @@
 <?php
+/**
+ * @file
+ * Theme functions for our social media buttons.
+ */
 
-
+/**
+ * Theme a facebook like button.
+ */
 function theme_facebook_like($variables) {
   $element = array(
     '#theme' => 'html_tag',
@@ -14,6 +20,9 @@ function theme_facebook_like($variables) {
   return render($element);
 }
 
+/**
+ * Theme a google +1 button.
+ */
 function theme_google_plus($variables) {
   $element = array(
     '#theme' => 'html_tag',
@@ -27,6 +36,9 @@ function theme_google_plus($variables) {
   return render($element);
 }
 
+/**
+ * Theme a tweet button.
+ */
 function theme_twitter_tweet($variables) {
   global $language;
   $element = array(
