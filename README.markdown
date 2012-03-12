@@ -9,10 +9,9 @@ TODOS:
 - kommentieren
     noticeme.module [DONE]
     noticeme.admin.inc [DONE]
-    noticeme.blocks.inc
     noticeme.fields.inc
-    noticeme.forms.inc
-    noticeme.install
+    noticeme.forms.inc [DONE]
+    noticeme.install [DONE]
     noticeme.theme.inc
     js/noticeme.js
     js/noticeme_forms.js

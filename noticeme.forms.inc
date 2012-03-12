@@ -1,5 +1,16 @@
 <?php
+/**
+ *@file
+ * Form definitions for
+ * and .
+ */
 
+/**
+ * Form definition for noticeme settings (admin/config/search/noticeme)
+ *
+ * @return
+ *   A form definition array.
+ */
 function _noticeme_settings_form($values) {
   $form = array();
   $form['title'] = array(
@@ -31,6 +42,13 @@ function _noticeme_settings_form($values) {
   return $form;
 }
 
+/**
+ * Configuration form for social media buttons which will be displayed in the
+ * display settings of attached fields.
+ *
+ * @return
+ *   A form definition array.
+ */
 function _noticeme_configuration_form($values) {
   $form['facebook'] = array(
     '#title' => 'Facebook Like',
@@ -78,7 +96,7 @@ function _noticeme_configuration_form($values) {
     ),
     'font' => array(
       '#type' => 'select',
-      '#title' => t('font'),
+      '#title' => t('Font'),
       '#options' => array(
         'arial' => 'arial',
         'lucida grande' => 'lucida grande',

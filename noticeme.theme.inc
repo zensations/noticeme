@@ -1,4 +1,6 @@
 <?php
+
+
 function theme_facebook_like($variables) {
   $element = array(
     '#theme' => 'html_tag',

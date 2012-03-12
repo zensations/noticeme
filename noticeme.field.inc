@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Field definition hooks four the noticeme field.
+ */
 
 /**
  * Implements hook_field_info().
@@ -38,17 +42,22 @@ function noticeme_field_formatter_info() {
   );
 }
 
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
 function noticeme_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
-  $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
-  $element = _noticeme_configuration_form($settings);
+  $element = _noticeme_configuration_form($instance['display'][$view_mode]['settings']);
   $element['#element_validate'] = array('_noticeme_field_formatter_settings_validate');
   return $element;
 }
 
-function _noticeme_field_formatter_settings_validate(&$form, &$form_state, &$entity) {
+/**
+ * Validate handler for noticeme_field_formatter_settings_form().
+ */
+function _noticeme_field_formatter_settings_validate($element, &$form_state, $form) {
   $field = $form_state['formatter_settings_edit'];
   $values = &$form_state['values']['fields'][$field]['settings_edit_form']['settings'];
+  // where are those values used?
   foreach ($values as $network => $settings) {
     foreach ($settings as $key => $value) {
       $values[$network . '_' . $key] = $value;
@@ -56,6 +65,9 @@ function _noticeme_field_formatter_settings_validate(&$form, &$form_state, &$ent
   }
 }
 
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
 function noticeme_field_formatter_settings_summary($field, $instance, $view_mode) {
   $summary = array();
   $settings = $instance['display'][$view_mode]['settings'];

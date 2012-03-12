@@ -1,5 +1,10 @@
 <?php
+
+/**
+ * Implements hook_field_schema().
+ */
 function noticeme_field_schema($field) {
+  // As we define only one field we can be sure that $field is our noticeme field.
   return array(
     'columns' => array(
       'title' => array(

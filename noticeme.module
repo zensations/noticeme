@@ -6,8 +6,9 @@
  * to the html header.
  */
 
-module_load_include('inc', 'noticeme', '/noticeme.field');
-module_load_include('inc', 'noticeme', '/noticeme.forms');
+$path = DRUPAL_ROOT.'/'.drupal_get_path('module','noticeme');
+require_once($path.'/noticeme.field.inc');
+require_once($path.'/noticeme.forms.inc');
 
 /**
  * Implements hook_init().
@@ -274,7 +275,8 @@ function noticeme_get_metadata_from_predefined_entity_data($entity_type, $entity
       break;
 
     case 'user':
-      $metadata['title'] = $account->name;
+      global $user;
+      $metadata['title'] = $user->name;
       $metadata['og_type'] = 'website';
       $metadata['schema_type'] = 'Person';
       break;

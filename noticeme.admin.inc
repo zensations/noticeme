@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * 
+ * Admin interface for sitewide graph metadata configuration
  */
 
 /**
@@ -23,6 +23,7 @@ function noticeme_admin_settings($form, &$form_state) {
     'form' => _noticeme_settings_form($values),
   );
 
+  //TODO add global default image
   unset($form['metadata']['form']['image']);
 
   $form['configuration'] = array(
@@ -46,7 +47,7 @@ function noticeme_admin_settings($form, &$form_state) {
 
   // Allow the admin to set different languages for fb, twitter and google,
   // depending on the current users language.
-  foreach (_noticeme_language_list as $id => $label) {
+  foreach (_noticeme_language_list() as $id => $label) {
     $row = array(
       'system' => array('#markup' => $label),
       'noticeme_' . $id . '_facebook' => array(
