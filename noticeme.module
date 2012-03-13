@@ -180,8 +180,7 @@ function noticeme_site_metadata() {
   $metadata['og_type'] = variable_get('noticeme_og_type', FALSE);
   $metadata['schema_type'] = variable_get('noticeme_schema_type', FALSE);
 
-  $metadata['image'] = variable_get('noticeme_image_path', FALSE);
-  dpm($metadata['image']);
+  $metadata['image'] = variable_get('noticeme_image', FALSE);
   if(strlen($metadata['image']) < 1) {
     // Default to a logo image if there is one.
     $logo_url = theme_get_setting('logo_path');
@@ -190,7 +189,10 @@ function noticeme_site_metadata() {
     }
   }
   else {
-    $metadata['image'] = file_create_url($metadata['image']);
+    $image = file_load($metadata['image']);
+    if($image) {
+      $metadata['image'] = file_create_url($image->uri);
+    }
   }
   // Let other modules alter global metadata.
   drupal_alter('noticeme_site_metadata', $metadata);

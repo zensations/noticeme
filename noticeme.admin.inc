@@ -14,7 +14,7 @@ function noticeme_admin_settings($form, &$form_state) {
     'og_type' => variable_get('noticeme_og_type', ''),
     'schema_type' => variable_get('noticeme_schema_type', ''),
     'description' => variable_get('noticeme_description', ''),
-    'image_path' => variable_get('noticeme_image_path',''),
+    'image' => variable_get('noticeme_image',''),
   );
 
   $form['metadata'] = array(
@@ -97,7 +97,7 @@ function noticeme_admin_settings_validate(&$form, &$form_state) {
   }
   else {
     // This is the value to be stored in a variable.
-    $form_state['values']['noticeme_image_path'] = $file->uri;
+    $form_state['values']['noticeme_image'] = $file->fid;
     // The file object is only used to mark it as permanent and used by this module
     // in noticeme_admin_settins_submit().
     $form_state['noticeme_image_file'] = $file;
