@@ -9,19 +9,19 @@
  */
 function theme_global_share_buttons_block($variables) {
   $element = array();
-  if($variables['facebook_like']) {
+  if ($variables['facebook_like']) {
     $element['facebook_like'] = array(
-      '#markup' => theme('facebook_like',$variables['facebook_like']),
+      '#markup' => theme('facebook_like', $variables['facebook_like']),
     );
   }
-  if($variables['google_plus_one']) {
+  if ($variables['google_plus_one']) {
     $element['google_plus_one'] = array(
-      '#markup' => theme('google_plus',$variables['google_plus_one']),
+      '#markup' => theme('google_plus', $variables['google_plus_one']),
     );
   }
-  if($variables['twitter_tweet']) {
+  if ($variables['twitter_tweet']) {
     $element['twitter_tweet'] = array(
-      '#markup' => theme('twitter_tweet',$variables['twitter_tweet']),
+      '#markup' => theme('twitter_tweet', $variables['twitter_tweet']),
     );
   }
   return render($element);

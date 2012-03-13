@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Schema and (un)install hooks.
+ */
 
 /**
  * Implements hook_field_schema().

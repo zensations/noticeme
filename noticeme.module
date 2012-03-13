@@ -6,9 +6,9 @@
  * to the html header.
  */
 
-$path = DRUPAL_ROOT.'/'.drupal_get_path('module','noticeme');
-require_once($path.'/noticeme.field.inc');
-require_once($path.'/noticeme.forms.inc');
+$path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'noticeme');
+require_once($path . '/noticeme.field.inc');
+require_once($path . '/noticeme.forms.inc');
 
 /**
  * Implements hook_init().
@@ -98,7 +98,7 @@ function noticeme_block_info() {
  * Implements hook_block_view().
  */
 function noticeme_block_view($delta = '') {
-  switch($delta) {
+  switch ($delta) {
     case 'noticeme_global':
       return array(
         'subject' => NULL,
@@ -112,7 +112,7 @@ function noticeme_block_view($delta = '') {
  * Implements hook_block_configure().
  */
 function noticeme_block_configure($delta = '') {
-  switch($delta) {
+  switch ($delta) {
     case 'noticeme_global':
       $values = array(
         'facebook_display' => variable_get('noticeme_global_block_fb_display', 'standard'),
@@ -135,7 +135,7 @@ function noticeme_block_configure($delta = '') {
  * Implements hook_block_save().
  */
 function noticeme_block_save($delta = '', $edit = array()) {
-  switch($delta) {
+  switch ($delta) {
     case 'noticeme_global':
       $values = array(
         variable_set('noticeme_global_block_fb_display', $edit['facebook_display']),
@@ -149,6 +149,7 @@ function noticeme_block_save($delta = '', $edit = array()) {
         variable_set('noticeme_global_block_twitter_display', $edit['twitter_display']),
         variable_set('noticeme_global_block_twitter_display_count', $edit['twitter_display_count']),
       );
+      break;
     default:
   }
 }
@@ -262,16 +263,16 @@ function noticeme_site_metadata() {
   $metadata['schema_type'] = variable_get('noticeme_schema_type', FALSE);
 
   $metadata['image'] = variable_get('noticeme_image', FALSE);
-  if(strlen($metadata['image']) < 1) {
+  if (strlen($metadata['image']) < 1) {
     // Default to a logo image if there is one.
     $logo_url = theme_get_setting('logo_path');
-    if(strlen($logo_url) > 0) {
+    if (strlen($logo_url) > 0) {
       $metadata['image'] = file_create_url($logo_url);
     }
   }
   else {
     $image = file_load($metadata['image']);
-    if($image) {
+    if ($image) {
       $metadata['image'] = file_create_url($image->uri);
     }
   }

@@ -14,7 +14,7 @@ function noticeme_admin_settings($form, &$form_state) {
     'og_type' => variable_get('noticeme_og_type', ''),
     'schema_type' => variable_get('noticeme_schema_type', ''),
     'description' => variable_get('noticeme_description', ''),
-    'image' => variable_get('noticeme_image',''),
+    'image' => variable_get('noticeme_image', ''),
   );
 
   $form['metadata'] = array(
@@ -106,8 +106,8 @@ function noticeme_admin_settings_validate(&$form, &$form_state) {
   // For some reason the method form_state_values_clean() in include/form.inc
   // throws an error while trying to clean the image upload and remove buttons.
   // So we unset them here to prevent that error.
-  foreach($form_state['buttons'] AS $index => $btn) {
-    if($btn['#name'] == 'image_upload_button' || $btn['#name'] == 'image_remove_button') {
+  foreach ($form_state['buttons'] AS $index => $btn) {
+    if ($btn['#name'] == 'image_upload_button' || $btn['#name'] == 'image_remove_button') {
       unset($form_state['buttons'][$index]);
     }
   }
