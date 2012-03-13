@@ -14,6 +14,7 @@ function noticeme_admin_settings($form, &$form_state) {
     'og_type' => variable_get('noticeme_og_type', ''),
     'schema_type' => variable_get('noticeme_schema_type', ''),
     'description' => variable_get('noticeme_description', ''),
+    'image_path' => variable_get('noticeme_image_path',''),
   );
 
   $form['metadata'] = array(
@@ -24,7 +25,7 @@ function noticeme_admin_settings($form, &$form_state) {
   );
 
   //TODO add global default image
-  unset($form['metadata']['form']['image']);
+  //unset($form['metadata']['form']['image']);
 
   $form['configuration'] = array(
     '#type' => 'fieldset',
@@ -68,7 +69,9 @@ function noticeme_admin_settings($form, &$form_state) {
     );
     $form['languages'][$id] = $row;
   }
-  return system_settings_form($form);
+  $form = system_settings_form($form);
+  $form['#submit'][] = 'noticeme_admin_settings_submit';
+  return $form;
 }
 /**
  * Validate handler for noticeme_admin_settings() form.
@@ -79,6 +82,51 @@ function noticeme_admin_settings_validate(&$form, &$form_state) {
     $form_state['values']['noticeme_' . $key] = $form_state['values'][$key];
     unset($form_state['values'][$key]);
   }
+  // Try to get an uploaded image. (The user selected a file and submitted the whole form.)
+  $validators = array('file_validate_is_image' => array());
+  $file = file_save_upload('image', $validators);
+
+  // The user selected a file, clicked upload and afterwards submitted the form.
+  if (is_null($file) && intval($form_state['values']['image']) != 0) {
+    $file = file_load($form_state['values']['image']);
+  }
+
+  // File upload failed.
+  if ($file === FALSE) {
+    form_set_error('image', t('The image could not be uploaded.'));
+  }
+  else {
+    // This is the value to be stored in a variable.
+    $form_state['values']['noticeme_image_path'] = $file->uri;
+    // The file object is only used to mark it as permanent and used by this module
+    // in noticeme_admin_settins_submit().
+    $form_state['noticeme_image_file'] = $file;
+  }
+
+  // For some reason the method form_state_values_clean() in include/form.inc
+  // throws an error while trying to clean the image upload and remove buttons.
+  // So we unset them here to prevent that error.
+  foreach($form_state['buttons'] AS $index => $btn) {
+    if($btn['#name'] == 'image_upload_button' || $btn['#name'] == 'image_remove_button') {
+      unset($form_state['buttons'][$index]);
+    }
+  }
+}
+
+/**
+ * Submit handler for noticeme_admin_settings() form.
+ */
+function noticeme_admin_settings_submit(&$form, &$form_state) {
+  // If the user uploaded a new logo or favicon, save it to a permanent location
+  // and use it in place of the default theme-provided file.
+  $file = @$form_state['noticeme_image_file'];
+  if (!empty($file) && !$file->status) {
+    $file->status = FILE_STATUS_PERMANENT;
+    file_save($file);
+    file_usage_add($file, 'noticeme', 'module', 1);
+  }
+  unset($form['values']['image']);
+  unset($form['input']['image']);
 }
 
 /**

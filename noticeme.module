@@ -177,17 +177,21 @@ function noticeme_site_metadata() {
 
   // Default to site_slogan if no global description is set.
   $metadata['description'] = variable_get('noticeme_description', variable_get('site_slogan'));
-
   $metadata['og_type'] = variable_get('noticeme_og_type', FALSE);
   $metadata['schema_type'] = variable_get('noticeme_schema_type', FALSE);
 
-  if (strlen(theme_get_setting('logo_path')) > 0) {
-    $metadata['image'] = file_create_url(theme_get_setting('logo_path'));
+  $metadata['image'] = variable_get('noticeme_image_path', FALSE);
+  dpm($metadata['image']);
+  if(strlen($metadata['image']) < 1) {
+    // Default to a logo image if there is one.
+    $logo_url = theme_get_setting('logo_path');
+    if(strlen($logo_url) > 0) {
+      $metadata['image'] = file_create_url($logo_url);
+    }
   }
   else {
-    $metadata['image'] = FALSE;
+    $metadata['image'] = file_create_url($metadata['image']);
   }
-
   // Let other modules alter global metadata.
   drupal_alter('noticeme_site_metadata', $metadata);
   return $metadata;

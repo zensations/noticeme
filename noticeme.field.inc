@@ -150,7 +150,6 @@ function noticeme_field_widget_info() {
  */
 function noticeme_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $element['#type'] = 'fieldset';
-  $element['#attached']['js'][] = drupal_get_path('module', 'noticeme') . '/js/noticeme_form.js';
   $element['#attributes']['class'][] = 'noticeme-configuration';
   $element['#element_submit'] = array('noticeme_widget_submit');
   $element['#weight'] = 100;
