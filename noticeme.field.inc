@@ -61,7 +61,7 @@ function _noticeme_field_formatter_settings_validate($element, &$form_state, $fo
   // in noticeme_field_formatter_view().
   foreach ($values as $network => $settings) {
     foreach ($settings as $key => $value) {
-      $values[$network . '_' . $key] = $value;
+      $values[$key] = $value;
     }
   }
 }

@@ -55,7 +55,7 @@ function _noticeme_configuration_form($values) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    'display' => array(
+    'facebook_display' => array(
       '#title' => t('Display'),
       '#type' => 'select',
       '#options' => array(
@@ -66,17 +66,17 @@ function _noticeme_configuration_form($values) {
       ),
       '#default_value' => $values['facebook_display'],
     ),
-    'send' => array(
+    'facebook_send' => array(
       '#type' => 'checkbox',
       '#title' => t('Show send button'),
       '#default_value' => $values['facebook_send'],
     ),
-    'faces' => array(
+    'facebook_faces' => array(
       '#type' => 'checkbox',
       '#title' => t('Show faces'),
       '#default_value' => $values['facebook_faces'],
     ),
-    'verb' => array(
+    'facebook_verb' => array(
       '#type' => 'select',
       '#title' => t('Verb'),
       '#options' => array(
@@ -85,7 +85,7 @@ function _noticeme_configuration_form($values) {
       ),
       '#default_value' => $values['facebook_verb'],
     ),
-    'color' => array(
+    'facebook_color' => array(
       '#type' => 'select',
       '#title' => t('Color'),
       '#options' => array(
@@ -94,7 +94,7 @@ function _noticeme_configuration_form($values) {
       ),
       '#default_value' => $values['facebook_color'],
     ),
-    'font' => array(
+    'facebook_font' => array(
       '#type' => 'select',
       '#title' => t('Font'),
       '#options' => array(
@@ -113,7 +113,7 @@ function _noticeme_configuration_form($values) {
     '#title' => t('Google +1'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    'display' => array(
+    'google_display' => array(
       '#title' => t('Display'),
       '#type' => 'select',
       '#options' => array(
@@ -125,7 +125,7 @@ function _noticeme_configuration_form($values) {
       ),
       '#default_value' => $values['google_display'],
     ),
-    'annotation' => array(
+    'google_annotation' => array(
       '#title' => t('Annotation'),
       '#type' => 'select',
       '#options' => array(
@@ -142,7 +142,7 @@ function _noticeme_configuration_form($values) {
     '#title' => t('Tweet this'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    'display' => array(
+    'twitter_display' => array(
       '#type' => 'select',
       '#title' => t('Display'),
       '#options' => array(
@@ -152,7 +152,7 @@ function _noticeme_configuration_form($values) {
       ),
       '#default_value' => $values['twitter_display'],
     ),
-    'display_count' => array(
+    'twitter_display_count' => array(
       '#type' => 'checkbox',
       '#title' => t('Display count'),
       '#default_value' => $values['twitter_display_count'],

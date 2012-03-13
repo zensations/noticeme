@@ -16,9 +16,9 @@ TODOS:
     js/noticeme.js [DONE]
     js/noticeme_forms.js [DONE]
 
-- globale bilddatei
-- globaler like-button block (aktuelle seite oder gesamte seite?)
-- vertical tabs rausnehmen
+- globale bilddatei [DONE]
+- globaler like-button block [DONE]
+- vertical tabs rausnehmen [DONE]
 - clean uninstall
 - integrität bei mehreren instances prüfen
 - alle möglichkeiten testen

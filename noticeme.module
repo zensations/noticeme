@@ -82,10 +82,91 @@ function noticeme_menu() {
 }
 
 /**
+ * Implements hook_block_info().
+ */
+function noticeme_block_info() {
+  return array(
+    'noticeme_global' => array(
+      'info' => t('Sitewide Noticeme Share Buttons'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+      ''
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function noticeme_block_view($delta = '') {
+  switch($delta) {
+    case 'noticeme_global':
+      return array(
+        'subject' => NULL,
+        'content' => noticeme_global_block(),
+      );
+    default:
+  }
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function noticeme_block_configure($delta = '') {
+  switch($delta) {
+    case 'noticeme_global':
+      $values = array(
+        'facebook_display' => variable_get('noticeme_global_block_fb_display', 'standard'),
+        'facebook_send' => variable_get('noticeme_global_block_fb_send', 'false'),
+        'facebook_faces' => variable_get('noticeme_global_block_fb_faces', 'false'),
+        'facebook_verb' => variable_get('noticeme_global_block_fb_verb', 'like'),
+        'facebook_color' => variable_get('noticeme_global_block_fb_color', 'light'),
+        'facebook_font' => variable_get('noticeme_global_block_fb_font', 'Arial'),
+        'google_display' => variable_get('noticeme_global_block_google_display', 'standard'),
+        'google_annotation' => variable_get('noticeme_global_block_google_annotation', 'info'),
+        'twitter_display' => variable_get('noticeme_global_block_twitter_display', 'small'),
+        'twitter_display_count' => variable_get('noticeme_global_block_twitter_display_count', 'false'),
+      );
+      return _noticeme_configuration_form($values);
+    default:
+  }
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function noticeme_block_save($delta = '', $edit = array()) {
+  switch($delta) {
+    case 'noticeme_global':
+      $values = array(
+        variable_set('noticeme_global_block_fb_display', $edit['facebook_display']),
+        variable_set('noticeme_global_block_fb_send', $edit['facebook_send']),
+        variable_set('noticeme_global_block_fb_faces', $edit['facebook_faces']),
+        variable_set('noticeme_global_block_fb_verb', $edit['facebook_verb']),
+        variable_set('noticeme_global_block_fb_color', $edit['facebook_color']),
+        variable_set('noticeme_global_block_fb_font', $edit['facebook_font']),
+        variable_set('noticeme_global_block_google_display', $edit['google_display']),
+        variable_set('noticeme_global_block_google_annotation', $edit['google_annotation']),
+        variable_set('noticeme_global_block_twitter_display', $edit['twitter_display']),
+        variable_set('noticeme_global_block_twitter_display_count', $edit['twitter_display_count']),
+      );
+    default:
+  }
+}
+
+/**
  * Implements hook_theme().
  */
 function noticeme_theme() {
   return array(
+    // Theme global share buttons block.
+    'global_share_buttons_block' => array(
+      'variables' => array(
+        'facebook_like' => FALSE,
+        'twitter_tweet' => FALSE,
+        'google_plus_one' => FALSE,
+      ),
+      'file' => 'noticeme.theme.inc',
+    ),
     // Theme facebook like button.
     'facebook_like' => array(
       'variables' => array(
@@ -386,4 +467,28 @@ function _noticeme_field_ids() {
     }
   }
   return $ids;
+}
+
+/**
+ * Content for the sitewide share buttons block.
+ */
+function noticeme_global_block() {
+  global $base_url;
+  $url = url($base_url, array('absolute' => TRUE));
+  $variables = array(
+    'facebook_like' => array(
+      'url' => $url,
+      'layout' => 'button_count',
+      'send' => 'false',
+      'show-faces' => 'false',
+      'action' => 'like',
+    ),
+    'google_plus_one' => array(
+      'url' => $url,
+    ),
+    'twitter_tweet' => array(
+      'url' => $url,
+    ),
+  );
+  return theme('global_share_buttons_block', $variables);
 }
