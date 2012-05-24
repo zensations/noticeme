@@ -149,13 +149,8 @@ function noticeme_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function noticeme_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $element['#type'] = 'fieldset';
-  $element['#attributes']['class'][] = 'noticeme-configuration';
-  $element['#element_submit'] = array('noticeme_widget_submit');
-  $element['#weight'] = 100;
   $item = (count($items) > 0)?$items[0]:array();
-  $element += _noticeme_settings_form($item);
-  return $element;
+  return _noticeme_settings_form($item);
 }
 
 
