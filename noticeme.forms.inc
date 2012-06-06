@@ -121,7 +121,7 @@ function _noticeme_configuration_form($values) {
         'small' => 'small',
         'medium' => 'medium',
         'standard' => 'standard',
-        'large' => 'large',
+        'tall' => 'tall',
       ),
       '#default_value' => $values['google_display'],
     ),
@@ -147,14 +147,19 @@ function _noticeme_configuration_form($values) {
       '#title' => t('Display'),
       '#options' => array(
         'hidden' => 'hidden',
-        'small' => 'small',
+        'medium' => 'medium',
         'large' => 'large',
       ),
       '#default_value' => $values['twitter_display'],
     ),
     'twitter_display_count' => array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t('Display count'),
+      '#options' => array(
+        'none' => 'none',
+        'horizontal' => 'horizontal',
+        'vertical' => 'vertical'
+      ),
       '#default_value' => $values['twitter_display_count'],
     ),
   );

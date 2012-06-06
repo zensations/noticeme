@@ -126,7 +126,7 @@ function noticeme_field_formatter_view($entity_type, $entity, $field, $instance,
         '#theme' => 'twitter_tweet',
         '#url' => $url,
         '#size' => $display['settings']['twitter_display'],
-        '#count' => $display['settings']['twitter_display_count']?'show':'none',
+        '#count' => $display['settings']['twitter_display_count'],
       );
     }
   }
