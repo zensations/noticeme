@@ -340,7 +340,6 @@ function noticeme_get_metadata_from_predefined_entity_data($entity_type, $entity
         $metadata['image'] = file_create_url($items[0]['uri']);
       }
       if ($items = field_get_items('node', $entity, 'body')) {
-        dpm($items);
         if (array_key_exists('summary', $items[0])) {
           if (drupal_strlen(trim($items[0]['summary'])) > 0) {
             $metadata['description'] = trim(drupal_html_to_text(check_markup($items[0]['summary'], $items[0]['format'])));
