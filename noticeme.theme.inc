@@ -32,6 +32,8 @@ function theme_global_share_buttons_block($variables) {
  */
 function theme_facebook_like($variables) {
   $element = array(
+    '#prefix' => '<div class="fb-like-wrapper noticeme-wrapper">',
+    '#suffix' => '</div>',
     '#theme' => 'html_tag',
     '#tag' => 'div',
     '#attributes' => array('class' => array('fb-like')),
@@ -48,6 +50,8 @@ function theme_facebook_like($variables) {
  */
 function theme_google_plus($variables) {
   $element = array(
+    '#prefix' => '<div class="g-plusone-wrapper noticeme-wrapper">',
+    '#suffix' => '</div>',
     '#theme' => 'html_tag',
     '#tag' => 'div',
     '#attributes' => array('class' => array('g-plusone')),
@@ -65,6 +69,8 @@ function theme_google_plus($variables) {
 function theme_twitter_tweet($variables) {
   global $language;
   $element = array(
+    '#prefix' => '<div class="tweet-this-wrapper noticeme-wrapper">',
+    '#suffix' => '</div>',
     '#type' => 'link',
     '#title' => t('Tweet'),
     '#href' => 'https://twitter.com/share',
