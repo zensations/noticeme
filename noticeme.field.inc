@@ -214,7 +214,9 @@ function noticeme_field_update($entity_type, $entity, $field, $instance, $langco
       $original_fids[] = $original_item['image'];
       if (isset($original_item['image']) && !in_array($original_item['image'], $current_fids)) {
         // Decrement the file usage count by 1 and delete the file if possible.
-        file_field_delete_file((array)file_load($original_item['image']), $field, $entity_type, $id);
+        if ($file = file_load($original_item['image'])) {
+          file_field_delete_file((array) $file, $field, $entity_type, $id);
+        }
       }
     }
   }
