@@ -58,7 +58,7 @@
   Drupal.noticeme.initTwitter = function(language) {
     // The twitter library has been laoded. Rerender the tweet buttons.
     if(jQuery('#twitter-wjs').length ) {
-      twttr.widgets.load();
+      //twttr.widgets.load();
     }
     // Load twitter library and render tweet buttons.
     else {
