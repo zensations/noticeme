@@ -298,6 +298,7 @@ function noticeme_site_metadata() {
 function noticeme_entity_metadata($menu_item) {
   switch ($menu_item['page_callback']) {
     case 'node_page_view':
+    case 'page_manager_node_view_page':
       $page_metadata = noticeme_get_metadata_from_predefined_entity_data('node', $menu_item['page_arguments'][0]);
       break;
 
@@ -388,6 +389,7 @@ function noticeme_get_metadata_from_predefined_entity_data($entity_type, $entity
 function noticeme_field_metadata($menu_item) {
   switch ($menu_item['page_callback']) {
     case 'node_page_view':
+    case 'page_manager_node_view_page':
       $metadata = noticeme_get_metadata_from_entity_noticeme_field('node', $menu_item['page_arguments'][0]);
       break;
 
