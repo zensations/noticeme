@@ -35,7 +35,7 @@ function noticeme_init() {
 
   if (strlen(trim(variable_get('noticeme_fb_admins'))) > 0) {
     $headers[] = array(
-      'property' => 'og:admins',
+      'property' => 'fb:admins',
       'content' => variable_get('noticeme_fb_admins'),
     );
   }
