@@ -45,8 +45,6 @@ function noticeme_init() {
       'content' => variable_get('noticeme_fb_appid'),
     );
   }
-  $headers[] = array('itemprop' => 'name', 'content' => $metadata['title']);
-  $headers[] = array('itemprop' => 'description', 'content' => $metadata['description']);
   foreach ($headers as $key => $header) {
     drupal_add_html_head(array(
       '#tag' => 'meta',
