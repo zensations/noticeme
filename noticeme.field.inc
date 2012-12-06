@@ -149,8 +149,14 @@ function noticeme_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function noticeme_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $item = (count($items) > 0)?$items[0]:array();
-  return _noticeme_settings_form($item);
+  $item = (count($items) > 0) ? $items[0] : array();
+  $element['#type'] = 'fieldset';
+  $element['#description'] = t('Configure information for social network crawlers.');
+  $element['#attributes']['class'][] = 'noticeme-configuration';
+  $element['#element_submit'] = array('noticeme_widget_submit');
+  $element['#group'] = 'additional_settings';
+  $element += _noticeme_settings_form($item);
+  return $element;
 }
 
 

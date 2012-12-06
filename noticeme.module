@@ -87,7 +87,6 @@ function noticeme_block_info() {
     'noticeme_global' => array(
       'info' => t('Sitewide Noticeme Share Buttons'),
       'cache' => DRUPAL_CACHE_GLOBAL,
-      ''
     ),
   );
 }
@@ -135,18 +134,16 @@ function noticeme_block_configure($delta = '') {
 function noticeme_block_save($delta = '', $edit = array()) {
   switch ($delta) {
     case 'noticeme_global':
-      $values = array(
-        variable_set('noticeme_global_block_fb_display', $edit['facebook_display']),
-        variable_set('noticeme_global_block_fb_send', $edit['facebook_send']),
-        variable_set('noticeme_global_block_fb_faces', $edit['facebook_faces']),
-        variable_set('noticeme_global_block_fb_verb', $edit['facebook_verb']),
-        variable_set('noticeme_global_block_fb_color', $edit['facebook_color']),
-        variable_set('noticeme_global_block_fb_font', $edit['facebook_font']),
-        variable_set('noticeme_global_block_google_display', $edit['google_display']),
-        variable_set('noticeme_global_block_google_annotation', $edit['google_annotation']),
-        variable_set('noticeme_global_block_twitter_display', $edit['twitter_display']),
-        variable_set('noticeme_global_block_twitter_display_count', $edit['twitter_display_count']),
-      );
+      variable_set('noticeme_global_block_fb_display', $edit['facebook_display']);
+      variable_set('noticeme_global_block_fb_send', $edit['facebook_send']);
+      variable_set('noticeme_global_block_fb_faces', $edit['facebook_faces']);
+      variable_set('noticeme_global_block_fb_verb', $edit['facebook_verb']);
+      variable_set('noticeme_global_block_fb_color', $edit['facebook_color']);
+      variable_set('noticeme_global_block_fb_font', $edit['facebook_font']);
+      variable_set('noticeme_global_block_google_display', $edit['google_display']);
+      variable_set('noticeme_global_block_google_annotation', $edit['google_annotation']);
+      variable_set('noticeme_global_block_twitter_display', $edit['twitter_display']);
+      variable_set('noticeme_global_block_twitter_display_count', $edit['twitter_display_count']);
       break;
     default:
   }
