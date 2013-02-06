@@ -7,8 +7,8 @@
  */
 
 $path = DRUPAL_ROOT . '/' . drupal_get_path('module', 'noticeme');
-require_once($path . '/noticeme.field.inc');
-require_once($path . '/noticeme.forms.inc');
+require_once $path . '/noticeme.field.inc';
+require_once $path . '/noticeme.forms.inc';
 
 /**
  * Implements hook_init().
@@ -103,6 +103,7 @@ function noticeme_block_view($delta = '') {
       );
     default:
   }
+  return array();
 }
 
 /**
@@ -126,6 +127,7 @@ function noticeme_block_configure($delta = '') {
       return _noticeme_configuration_form($values);
     default:
   }
+  return array();
 }
 
 /**
@@ -145,6 +147,7 @@ function noticeme_block_save($delta = '', $edit = array()) {
       variable_set('noticeme_global_block_twitter_display', $edit['twitter_display']);
       variable_set('noticeme_global_block_twitter_display_count', $edit['twitter_display_count']);
       break;
+
     default:
   }
 }
@@ -209,11 +212,11 @@ function noticeme_theme() {
 /**
  * Build social media metadata for current page/url.
  *
- * Uses data from noticeme_site_metadata() as default, overrides it with data extracted
- * from the entity, data stored in noticeme fields and finally
+ * Uses data from noticeme_site_metadata() as default, overrides it with data
+ * extracted from the entity, data stored in noticeme fields and finally
  * hook_noticeme_field_metadata_alter().
  *
- * @return
+ * @return mixed
  *   An array with global social media metadata.
  *   See noticeme_get_metadata_from_entity_noticeme_field() for details.
  */
@@ -222,14 +225,16 @@ function noticeme_page_metadata() {
   if (!isset($metadata)) {
     $menu_item = menu_get_item();
 
-    // Default to global values and override with metadata extracted from the entity.
+    // Default to global values and override with metadata extracted from the
+    // entity.
     $metadata = array_merge(noticeme_site_metadata(), noticeme_entity_metadata($menu_item));
     // Let other modules extract metadata from entity types they define.
     drupal_alter('noticeme_entity_metadata', $metadata, $menu_item);
 
     // Override with metadata stored in the entity's noticeme field.
     $metadata = array_merge($metadata, noticeme_field_metadata($menu_item));
-    // Let other modules set metadata for noticeme fields that are attached to entity types they define.
+    // Let other modules set metadata for noticeme fields that are attached to
+    // entity types they define.
     drupal_alter('noticeme_field_metadata', $metadata, $menu_item);
   }
   return $metadata;
@@ -241,7 +246,7 @@ function noticeme_page_metadata() {
  * This data will be overridden by data stored in entities and data stored in
  * noticeme fields.
  *
- * @return
+ * @return mixed
  *   An array with global social media metadata.
  *   See noticeme_get_metadata_from_entity_noticeme_field() for details.
  */
@@ -281,12 +286,12 @@ function noticeme_site_metadata() {
  *
  * Collects metadata from predefined entities. For custom entity types implement
  * hook_noticeme_entity_metadata_alter() which is called after this function.
- * @see noticeme_page_metadata().
-
- * @param $menu_item
+ * @see noticeme_page_metadata()
+ *
+ * @param mixed $menu_item
  *   The current page's menu router item.
  *
- * @return
+ * @return mixed
  *   An array with global social media metadatarmation.
  *   See noticeme_get_metadata_from_entity_noticeme_field() for details.
  */
@@ -317,10 +322,10 @@ function noticeme_entity_metadata($menu_item) {
  * Builds metadata for the entity types node, comment and user by using data
  * stored in the entity (like node title, image fields,...).
  *
- * @param $entity_type
+ * @param string $entity_type
  *   The entity's type
  *
- * @param $entity
+ * @param mixed $entity
  *   The entity for which we extract social media metadata.
  *
  * @return array
@@ -368,16 +373,16 @@ function noticeme_get_metadata_from_predefined_entity_data($entity_type, $entity
   return $metadata;
 }
 
-/*
+/**
  * Builds social media metadata from a noticeme field.
  *
- * Builds metadata by getting it from a noticeme field which is attached to the entity
- * type we're displaying on the current page.
+ * Builds metadata by getting it from a noticeme field which is attached to the
+ * entity type we're displaying on the current page.
  *
- * @param $menu_item
+ * @param mixed $menu_item
  *   The current page's menu router item
  *
- * @return
+ * @return mixed
  *   An array with global social media metadata.
  *   See noticeme_get_metadata_from_entity_noticeme_field() for details.
  */

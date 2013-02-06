@@ -16,27 +16,42 @@ function _noticeme_settings_form($values) {
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title'),
+    '#attributes' => array(
+      'class' => array('noticeme-title'),
+    ),
     '#default_value' => @$values['title'],
   );
   $form['og_type'] = array(
     '#type' => 'textfield',
     '#title' => t('Open Graph Type'),
+    '#attributes' => array(
+      'class' => array('noticeme-og'),
+    ),
     '#default_value' => @$values['og_type'],
   );
   $form['schema_type'] = array(
     '#type' => 'textfield',
     '#title' => t('Schema Type'),
+    '#attributes' => array(
+      'class' => array('noticeme-schema'),
+    ),
     '#default_value' => @$values['schema_type'],
   );
   $form['description'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
+    '#attributes' => array(
+      'class' => array('noticeme-description'),
+    ),
     '#default_value' => @$values['description'],
   );
   $form['image'] = array(
     '#type' => 'managed_file',
     '#title' => t('Image'),
     '#default_value' => @$values['image'],
+    '#attributes' => array(
+      'class' => array('noticeme-image'),
+    ),
     '#upload_location' => 'public://noticeme/',
   );
   return $form;

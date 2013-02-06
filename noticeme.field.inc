@@ -155,6 +155,9 @@ function noticeme_field_widget_form(&$form, &$form_state, $field, $instance, $la
   $element['#attributes']['class'][] = 'noticeme-configuration';
   $element['#element_submit'] = array('noticeme_widget_submit');
   $element['#group'] = 'additional_settings';
+  $element['#attached'] = array(
+    'js' => array(drupal_get_path('module', 'noticeme') . '/js/noticeme-admin.js' => array()),
+  );
   $element += _noticeme_settings_form($item);
   return $element;
 }
